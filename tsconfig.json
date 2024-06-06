@@ -1,0 +1,18 @@
+{
+    // 编译选项
+    "compilerOptions": {
+      "target": "es5",                  // 编译后代码的目标版本
+      "lib": ["dom", "es2015"],          // 使用的库
+    //   "jsx": "react",  
+      "jsx": "react-jsx",                   // 支持 React JSX 语法
+      "module": "commonjs",              // 生成的模块规范
+      "moduleResolution": "node",        // 模块解析方式
+      "esModuleInterop": true,           // 启用导入/导出兼容性
+      "strict": true                     // 启用所有严格类型检查
+    },
+    // 编译的文件
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    // 不编译的文件
+    "exclude": ["node_modules"]
+  }
+  

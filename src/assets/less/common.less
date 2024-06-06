@@ -1,0 +1,442 @@
+#root {
+    height: 100%;
+    color: #000;
+  }
+  
+  html,
+  body,
+  div,
+  span,
+  applet,
+  object,
+  iframe,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  blockquote,
+  pre,
+  a,
+  abbr,
+  acronym,
+  address,
+  big,
+  cite,
+  code,
+  del,
+  dfn,
+  em,
+  img,
+  ins,
+  kbd,
+  q,
+  s,
+  samp,
+  small,
+  strike,
+  strong,
+  sub,
+  sup,
+  tt,
+  var,
+  b,
+  u,
+  i,
+  center,
+  dl,
+  dt,
+  dd,
+  ol,
+  ul,
+  li,
+  fieldset,
+  form,
+  label,
+  legend,
+  table,
+  caption,
+  tbody,
+  tfoot,
+  thead,
+  tr,
+  th,
+  td,
+  article,
+  aside,
+  canvas,
+  details,
+  embed,
+  figure,
+  figcaption,
+  footer,
+  header,
+  hgroup,
+  menu,
+  nav,
+  output,
+  ruby,
+  section,
+  summary,
+  time,
+  mark,
+  audio,
+  video {
+    font-family: inherit;
+    font-size: 100%;
+    margin: 0;
+    padding: 0;
+    vertical-align: baseline;
+    border: 0;
+    box-sizing: border-box;
+  }
+  
+  body,
+  html {
+    min-width: 1280px;
+    height: 100%;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.65);
+  }
+  
+  /** ------------------------------------------ */
+  
+  .h100p {
+    height: 100%;
+  }
+  .h50p {
+    height: 50%;
+  }
+  .w100p {
+    width: 100%;
+  }
+  .width60 {
+    width: 60%;
+  }
+  .min-width0 {
+    min-width: 0;
+  }
+  .block {
+    display: block;
+  }
+  .inline-block {
+    display: inline-block;
+  }
+  .flex {
+    display: flex;
+  }
+  .flex-col {
+    display: flex;
+    flex-direction: column;
+  }
+  .flex-c-c {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .flex-col-c {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .flex-h-center {
+    justify-content: center;
+  }
+  .flex-h-end {
+    justify-content: flex-end;
+  }
+  .flex-v-center {
+    align-items: center;
+  }
+  .flex-v-top {
+    align-items: flex-start;
+  }
+  .flex-v-bottom {
+    align-items: flex-end;
+  }
+  .flex-1 {
+    flex: 1;
+  }
+  .flex-sb {
+    justify-content: space-between;
+  }
+  .align-right {
+    text-align: right;
+  }
+  .align-center {
+    text-align: center;
+  }
+  .align-left {
+    text-align: left;
+  }
+  .word-break-all {
+    word-break: break-all; // 按字符截断换行 /* 支持IE和chrome，FF不支持*/
+    word-wrap: break-word;
+  }
+  .bold {
+    font-weight: bold;
+  }
+  .lh1 {
+    line-height: 1;
+  }
+  .lh2 {
+    line-height: 2;
+  }
+  .lh3 {
+    line-height: 3;
+  }
+  .lh4 {
+    line-height: 4;
+  }
+  .mr5 {
+    margin-right: 5px;
+  }
+  .ml5 {
+    margin-left: 5px;
+  }
+  .mt5 {
+    margin-top: 5px;
+  }
+  .mt10 {
+    margin-top: 10px !important;
+  }
+  .mr10 {
+    margin-right: 10px;
+  }
+  .ml10 {
+    margin-left: 10px;
+  }
+  .mb10 {
+    margin-bottom: 10px;
+  }
+  .mt15 {
+    margin-top: 15px;
+  }
+  .mr15 {
+    margin-right: 15px;
+  }
+  .ml15 {
+    margin-left: 15px;
+  }
+  .mb15 {
+    margin-bottom: 15px;
+  }
+  
+  .mt20 {
+    margin-top: 20px !important;
+  }
+  .mr20 {
+    margin-right: 20px;
+  }
+  .ml16 {
+    margin-left: 16px;
+  }
+  .ml20 {
+    margin-left: 20px;
+  }
+  .mb20 {
+    margin-bottom: 20px !important;
+  }
+  .mt30 {
+    margin-top: 30px;
+  }
+  .mr30 {
+    margin-right: 30px;
+  }
+  .ml30 {
+    margin-left: 30px !important;
+  }
+  .mb30 {
+    margin-bottom: 30px !important;
+  }
+  .mt40 {
+    margin-top: 40px !important;
+  }
+  .mr40 {
+    margin-right: 40px;
+  }
+  .ml40 {
+    margin-left: 40px !important;
+  }
+  .mb40 {
+    margin-bottom: 40px !important;
+  }
+  .mt50 {
+    margin-top: 50px;
+  }
+  .mr50 {
+    margin-right: 50px !important;
+  }
+  .ml50 {
+    margin-left: 50px !important;
+  }
+  .mb50 {
+    margin-bottom: 50px !important;
+  }
+  .mt60 {
+    margin-top: 60px;
+  }
+  .mr60 {
+    margin-right: 60px;
+  }
+  .ml60 {
+    margin-left: 60px;
+  }
+  .mb60 {
+    margin-bottom: 60px;
+  }
+  .mb90 {
+    margin-bottom: 90px;
+  }
+  .p5 {
+    padding: 5px;
+  }
+  .pNr5 {
+    padding: 5px 5px 5px 0;
+  }
+  .pt10 {
+    padding-top: 10px;
+  }
+  .pr10 {
+    padding-right: 10px;
+  }
+  .pl10 {
+    padding-left: 10px;
+  }
+  .pl40 {
+    padding-left: 40px;
+  }
+  .pb90 {
+    padding-bottom: 90px !important;
+  }
+  .pb70 {
+    padding-bottom: 70px !important;
+  }
+  
+  .fs14 {
+    font-size: 14px;
+  }
+  .fs12 {
+    font-size: 12px;
+  }
+  .fs16 {
+    font-size: 16px;
+  }
+  .fs18 {
+    font-size: 18px;
+  }
+  .fs20 {
+    font-size: 20px;
+  }
+  .cur-pointer {
+    cursor: pointer;
+  }
+  .white {
+    color: #fff;
+  }
+  .black {
+    color: #000;
+  }
+  .red {
+    color: #fb3d3d;
+    &:hover {
+      color: #fb3d3d;
+    }
+  }
+  .green {
+    color: #52c41a;
+  }
+  
+  .block {
+    display: block;
+  }
+  .pointer {
+    cursor: pointer;
+  }
+  .bg-white {
+    background-color: #fff;
+  }
+  .width240 {
+    width: 240px;
+  }
+  .width150 {
+    width: 150px;
+  }
+  .ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .nowrap {
+    white-space: nowrap;
+  }
+  .hide {
+    display: none !important;
+  }
+  .mut-ellipise2 {
+    display: -webkit-box; //将盒子作为弹性伸缩盒子模型显示
+    -webkit-box-orient: vertical; // 设置或检索伸缩盒对象的子元素的排列顺序
+    -webkit-line-clamp: 2; // 用来限制在一个块元素显示的文本的行数
+    overflow: hidden;
+  }
+  .no-margin {
+    margin: 0 !important;
+  }
+  .shadow {
+    box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .common-board {
+    position: relative;
+    box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid transparent;
+  }
+  .buttonColor {
+    color: @buttonColor;
+  }
+  
+  .font-bold {
+    font-weight: bold;
+  }
+  .right-btn-wrap {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .table-title {
+    font-size: 18px;
+    font-weight: 400;
+  }
+  
+  .common-icon-size {
+    width: 12px;
+    height: 12px;
+    margin-right: 7px;
+  }
+  
+  .disabled-color {
+    color: #dbdbdb;
+  }
+  .disabled-color-btn {
+    color: #dbdbdb;
+    cursor: not-allowed;
+  }
+  
+  .disabled-color:hover,
+  .disabled-color:active,
+  .disabled-color:visited {
+    color: #dbdbdb;
+  }
+  .hot {
+    color: #ff4d4f;
+  }
+  .cold {
+    color: #00bfff;
+  }
+  .bd {
+    border: 1px solid #000;
+  }

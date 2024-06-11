@@ -4,6 +4,13 @@ import { EShape } from "../Toolbar/common";
 export const STROKE_WIDTH = 5;
 export const CANVAS_WIDTH = 800;
 export const CANVAS_HEITHT = 600;
+
+export const INPUT_OFFSET = {
+    x: 0,
+    y: 10,
+}
+
+const COMMON_SHAPE_SIZE = 100;
 export interface IPoint {
     x: number;
     y: number;
@@ -72,14 +79,16 @@ export const getInitShapeData = (name: EShape, x: number, y: number) => {
         case EShape.RECT:
             data = {
                 ...commonData,
-                width: 100,
-                height: 100,
+                // x: x + COMMON_SHAPE_SIZE / 2,
+                // y: y + COMMON_SHAPE_SIZE / 2,
+                width: COMMON_SHAPE_SIZE,
+                height: COMMON_SHAPE_SIZE,
             }
             break;
         case EShape.CIRCLE:
             data = {
                 ...commonData,
-                radius: 50,
+                radius: COMMON_SHAPE_SIZE / 2,
                 startAngle: 0,
                 endAngle: 2 * Math.PI,
                 counterclockwise: false,
@@ -98,14 +107,14 @@ export const getInitShapeData = (name: EShape, x: number, y: number) => {
 
 export const drawShap = (ctx: CanvasRenderingContext2D | null, shape: IShape, selectedId: string) => {
     if (ctx) {
-        ctx.fillStyle = "orange";
+        ctx.fillStyle = "white";
         ctx.strokeStyle = "green";
         ctx.lineWidth = STROKE_WIDTH;
         if (shape.type === EShape.RECT) {
             const { x, y, width, height } = shape.data as IRectData;
-            ctx.fillRect(x, y, width, height);
+            ctx.fillRect(x - COMMON_SHAPE_SIZE / 2, y - COMMON_SHAPE_SIZE / 2, width, height);
             if (selectedId === shape.id) {
-                ctx.strokeRect(x, y, width, height);
+                ctx.strokeRect(x - COMMON_SHAPE_SIZE / 2, y - COMMON_SHAPE_SIZE / 2, width, height);
             }
         } else if (shape.type === EShape.CIRCLE) {
             const { x, y, radius, startAngle, endAngle, counterclockwise } = shape.data as ICircleData;
@@ -122,7 +131,12 @@ export const drawShap = (ctx: CanvasRenderingContext2D | null, shape: IShape, se
 export const isPointInShape = (pointX: number, pointY: number, shape: IShape) => {
     if (shape.type === EShape.RECT) {
         const { x, y, width, height } = shape.data as IRectData;
-        return pointX >= x && pointX <= x + width && pointY >= y && pointY <= y + height;
+        const left = x - COMMON_SHAPE_SIZE / 2;
+        const top = y - COMMON_SHAPE_SIZE / 2;
+        return pointX >= left
+            && pointX <= left + width
+            && pointY >= top
+            && pointY <= top + height;
     } else if (shape.type === EShape.CIRCLE) {
         const { x, y, radius } = shape.data as ICircleData;
         const dx = pointX - x;

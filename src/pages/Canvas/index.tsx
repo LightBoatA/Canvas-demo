@@ -1,6 +1,6 @@
-import React, { DragEvent, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ChangeEventHandler, DragEvent, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IMouseInfo, IPoint, IShape, drawLine, drawShap, getInitShapeData, getMousePos, isPointInShape } from './common';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IMouseInfo, INPUT_OFFSET, IPoint, IShape, drawLine, drawShap, getInitShapeData, getMousePos, isPointInShape } from './common';
 import { getCryptoUuid } from '../../utils/util';
 import { HistoryManager } from './HistoryManager';
 
@@ -19,7 +19,10 @@ export const Canvas: React.FC<IProps> = props => {
     const beginPointRef = useRef<IPoint | null>(null);
     const [shapes, setShapes] = useState<IShape[]>([]);
     const [selectedId, setSelectedId] = useState<string>("");
-    const [mouseInfo, setMouseInfo ] = useState<IMouseInfo>(DEFAULT_MOUSE_INFO);
+    const [mouseInfo, setMouseInfo] = useState<IMouseInfo>(DEFAULT_MOUSE_INFO);
+    const [isShowTextInput, setIsShowTextInput] = useState<boolean>(false);
+    const [textPosition, setTextPosition] = useState<IPoint>({ x: 0, y: 0 });
+    const [editingText, setEditingText] = useState<string>("");
     // const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
     // const [mouseOffset, setMouseOffset] = useState<IPoint>({ x: 0, y: 0 });
 
@@ -161,6 +164,8 @@ export const Canvas: React.FC<IProps> = props => {
     }, [])
 
     const handleMouseDown = useCallback((e: MouseEvent) => {
+        console.log('鼠标落下事件');
+
         const { offsetX, offsetY } = e;
         let hasSelected = false;
         for (let i = shapes.length - 1; i >= 0; i--) {
@@ -168,7 +173,7 @@ export const Canvas: React.FC<IProps> = props => {
                 setSelectedId(shapes[i].id);
                 setMouseInfo({
                     isDown: true,
-                    mouseOffset: { 
+                    mouseOffset: {
                         x: offsetX - shapes[i].data.x,
                         y: offsetY - shapes[i].data.y,
                     }
@@ -182,6 +187,18 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [shapes])
 
+    const handleDoubleClick = useCallback((e: MouseEvent) => {
+        const { offsetX, offsetY } = e;
+        const clickedShape = shapes.find(shape => isPointInShape(offsetX, offsetY, shape));
+        if (clickedShape) {
+            setSelectedId(clickedShape.id);
+            setTextPosition({
+                x: clickedShape.data.x - INPUT_OFFSET.x,
+                y: clickedShape.data.y - INPUT_OFFSET.y,
+            })
+            setIsShowTextInput(true);
+        }
+    }, [shapes])
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (mouseInfo?.isDown && selectedId) {
             const { offsetX, offsetY } = e;
@@ -196,7 +213,7 @@ export const Canvas: React.FC<IProps> = props => {
                             y: offsetY - mouseOffsety,
                         }
                     }
-                } else  return shape
+                } else return shape
             })
             setShapes(newShapes);
         }
@@ -204,12 +221,22 @@ export const Canvas: React.FC<IProps> = props => {
     }, [mouseInfo?.isDown, mouseInfo.mouseOffset, selectedId, shapes])
 
     const handleMouseUp = useCallback((e: MouseEvent) => {
+        console.log('鼠标抬起事件');
+
         setMouseInfo({
             ...mouseInfo,
             isDown: false,
         });
         historyManager.push(shapes);
     }, [mouseInfo, shapes])
+
+    const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditingText(e.target.value);
+    }, [])
+
+    const handleTextSubmit = useCallback(() => {
+        
+    }, [])
 
     return useMemo(() => {
         return (
@@ -221,11 +248,23 @@ export const Canvas: React.FC<IProps> = props => {
                 onMouseDown={(e) => handleMouseDown(e.nativeEvent)}
                 onMouseMove={(e) => handleMouseMove(e.nativeEvent)}
                 onMouseUp={(e) => handleMouseUp(e.nativeEvent)}
+                onDoubleClick={(e) => handleDoubleClick(e.nativeEvent)}
             >
                 <canvas id='drawing' width={CANVAS_WIDTH} height={CANVAS_HEITHT} ref={canvasRef}>这是一个画布</canvas>
+                {isShowTextInput && <input
+                    style={{
+                        position: 'absolute',
+                        left: textPosition.x,
+                        top: textPosition.y,
+                    }}
+                    value={editingText}
+                    type='text'
+                    onChange={handleTextChange}
+                    onBlur={handleTextSubmit}
+                />}
             </div>
         );
-    }, [handleDrop, handleMouseDown, handleMouseMove, handleMouseUp]);
+    }, [editingText, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, isShowTextInput, textPosition.x, textPosition.y]);
 };
 
 export default Canvas;

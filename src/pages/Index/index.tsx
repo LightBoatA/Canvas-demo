@@ -5,6 +5,7 @@ import { CustomerServiceOutlined, BookOutlined } from '@ant-design/icons';
 import { EPage } from './common';
 import Home from '../Home';
 import Canvas from '../Canvas';
+import CenterBox from '../CenterBox';
 const items: MenuProps['items'] = [
   {
     label: '首页',
@@ -28,7 +29,7 @@ export const Index: React.FC<IProps> = props => {
   const contentComp = useMemo(() => {
     switch (current) {
       case EPage.home:
-        return <Canvas/>
+        return <CenterBox/>
       case EPage.score:
         return <></>
       default:

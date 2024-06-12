@@ -8,8 +8,6 @@ interface IProps {
 export const Toolbar: React.FC<IProps> = props => {
 
     const handleDragStart = useCallback((e: DragEvent, shape: IDragShap) => {
-        console.log("~~~~~~~~~~开始拖拽");
-        
         e.dataTransfer?.setData("json", JSON.stringify({
             name: shape.name,
         }))
@@ -20,6 +18,7 @@ export const Toolbar: React.FC<IProps> = props => {
                 {
                     DRAG_SHAPES.map(shape => {
                         return <div
+                            draggable
                             key={shape.name}
                             className={` shape ${shape.class}`}
                             onDragStart={(e) => handleDragStart(e.nativeEvent, shape)}

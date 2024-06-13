@@ -1,6 +1,6 @@
 import React, { ChangeEventHandler, DragEvent, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IMouseInfo, INPUT_OFFSET, IPoint, IShape, drawLine, drawShape, getInitShapeData, getMousePos, isPointInShape } from './common';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EDirection, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IPoint, IShape, calcResizedShape, cursorDirectionMap, drawLine, drawShape, getCtrlPoints, getInitShapeData, getIntersectedControlPoint, getMousePos, getShapeById, isPointInShape } from './common';
 import { getCryptoUuid } from '../../utils/util';
 import { HistoryManager } from './HistoryManager';
 import { EShape } from '../Toolbar/common';
@@ -21,77 +21,15 @@ export const Canvas: React.FC<IProps> = props => {
     const beginPointRef = useRef<IPoint | null>(null);
     const [shapes, setShapes] = useState<IShape[]>([]);
     const [selectedId, setSelectedId] = useState<string>("");
-    const [hoverId, setHoverId] = useState<string>("");
     const [mouseInfo, setMouseInfo] = useState<IMouseInfo>(DEFAULT_MOUSE_INFO);
     // const [isShowTextInput, setIsShowTextInput] = useState<boolean>(false);
     // const [textPosition, setTextPosition] = useState<IPoint>({ x: 0, y: 0 });
     const [editingText, setEditingText] = useState<string>("");
     const [editingId, setEditingId] = useState<string>("");
-    // const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
-    // const [mouseOffset, setMouseOffset] = useState<IPoint>({ x: 0, y: 0 });
-
-    // useEffect(() => {
-    //     if (canvasRef.current) {
-    //         const context = canvasRef.current.getContext('2d')
-    //         if (context) {
-    //             // 绘制矩形
-    //             // context.fillRect(25, 25, 100, 100);
-    //             // context.strokeRect(250, 250, 50, 50);
-
-    //             // 画笔初始化
-    //             context.lineWidth = 1;
-    //             context.strokeStyle = "#000";
-
-    //             const handleMouseDown = (e: MouseEvent) => {
-    //                 e.preventDefault();
-    //                 const { x, y } = getMousePos(e);
-    //                 context.beginPath();
-    //                 context.moveTo(x, y);
-    //                 isDownRef.current = true;
-    //                 pointsRef.current.push({ x, y });
-    //                 beginPointRef.current = { x, y };
-    //             }
-
-    //             canvasRef.current.addEventListener('mousedown', handleMouseDown)
-
-    //             const handleMouseMove = (e: MouseEvent) => {
-    //                 if (!isDownRef.current) return;
-    //                 pointsRef.current.push(getMousePos(e))
-
-    //                 if (pointsRef.current.length > 3 && beginPointRef.current) {
-    //                     const lastTwoPoints = pointsRef.current.slice(-2);
-    //                     const controlPoint = lastTwoPoints[0];
-    //                     const endPoint = {
-    //                         x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
-    //                         y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2,
-    //                     }
-    //                     drawLine(context, beginPointRef.current, controlPoint, endPoint)
-    //                     beginPointRef.current = endPoint;
-    //                 }
-    //             }
-    //             canvasRef.current.addEventListener('mousemove', handleMouseMove)
-
-    //             canvasRef.current?.addEventListener('mouseup', (e: MouseEvent) => {
-    //                 if (!isDownRef.current) return;
-    //                 pointsRef.current.push(getMousePos(e));
-
-    //                 if (pointsRef.current.length > 3 && beginPointRef.current) {
-    //                     const lastTwoPoints = pointsRef.current.slice(-2);
-    //                     const controlPoint = lastTwoPoints[0];
-    //                     const endPoint = lastTwoPoints[1];
-    //                     drawLine(context, beginPointRef.current, controlPoint, endPoint)
-    //                 }
-    //                 beginPointRef.current = null;
-    //                 isDownRef.current = false;
-    //                 pointsRef.current = [];
-
-    //                 canvasRef.current?.addEventListener('mousemove', handleMouseMove);
-    //             })
-    //         }
-    //     }
-    //     return () => {
-    //     }
-    // }, [])
+    // 鼠标悬停在缩放控制点上
+    const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(null);
+    // 鼠标悬停在形状上
+    const [hoveringId, setHoveringId] = useState<string>("");
 
     useEffect(() => {
         if (canvasRef.current && !ctxRef.current) {
@@ -99,20 +37,27 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [])
 
+    // 鼠标移动到缩放点时，光标样式修改
+    useEffect(() => {
+        if (canvasRef.current) {
+            canvasRef.current.style.cursor = hoveringCtrlPoint ?
+                `${cursorDirectionMap[hoveringCtrlPoint.direction]}`
+                : `default`;
+        }
+    }, [hoveringCtrlPoint])
+
     const clearCanvas = useCallback(() => {
         if (ctxRef.current) {
             ctxRef.current.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEITHT);
         }
     }, [])
 
-
-
     useEffect(() => {
         if (ctxRef.current) {
             clearCanvas();
-            drawShape(ctxRef.current, shapes, selectedId);
+            drawShape(ctxRef.current, shapes, selectedId, hoveringId);
         }
-    }, [clearCanvas, selectedId, shapes])
+    }, [clearCanvas, hoveringId, selectedId, shapes])
 
     const handleUndo = useCallback(() => {
         const prevShapes = historyManager.undo();
@@ -143,17 +88,6 @@ export const Canvas: React.FC<IProps> = props => {
         }
     })
 
-    const handleDragover = (e: DragEvent) => {
-        e.preventDefault();
-    }
-
-    /**
-     * @description: 通过拖放位置生成新图形
-     * @param {*} name 形状名称
-     * @param {*} offsetX 放置位置（鼠标位置） 
-     * @param {*} offsetY
-     * @return {*} 
-     */
     const addShape = useCallback((name: EShape, offsetX: number, offsetY: number) => {
         const shape = getInitShapeData(name, offsetX, offsetY);
         setSelectedId(shape.id);
@@ -163,13 +97,6 @@ export const Canvas: React.FC<IProps> = props => {
             return newShapes;
         })
     }, [])
-
-
-    const handleDrop = useCallback((e: any) => {
-        const { offsetX, offsetY } = e;
-        const { name } = JSON.parse(e.dataTransfer.getData("json"));
-        addShape(name, offsetX, offsetY)
-    }, [addShape])
 
     const selectShape = useCallback((offsetX: number, offsetY: number) => {
         let hasSelected = false;
@@ -192,21 +119,6 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [shapes])
 
-    // const hoverShape = useCallback((offsetX: number, offsetY: number) => {
-    //     for (let i = shapes.length - 1; i >= 0; i--) {
-    //         if (isPointInShape(offsetX, offsetY, shapes[i])) {
-                
-    //         }
-    //     }
-    // }, [])
-
-
-    const handleMouseDown = useCallback((e: MouseEvent) => {
-        const { offsetX, offsetY } = e;
-        if (e.target === inputRef.current) return;
-        selectShape(offsetX, offsetY);
-    }, [selectShape])
-
     const updateShapeText = useCallback((id: string, newText: string) => {
         setShapes(prevShapes => {
             return prevShapes.map(shape => {
@@ -219,11 +131,7 @@ export const Canvas: React.FC<IProps> = props => {
             })
         })
     }, [])
-    /**
-     * @description: 在鼠标双击位置开启文字编辑
-     * @param {*} useCallback
-     * @return {*}
-     */
+
     const startEditing = useCallback((x: number, y: number) => {
         const clickedShape = shapes.find(shape => isPointInShape(x, y, shape));
         if (clickedShape) {
@@ -239,11 +147,6 @@ export const Canvas: React.FC<IProps> = props => {
             inputRef.current.focus();
         }
     }, [editingId])
-
-    const handleDoubleClick = useCallback((e: MouseEvent) => {
-        const { offsetX, offsetY } = e;
-        startEditing(offsetX, offsetY);
-    }, [startEditing])
 
     const aaa = useCallback(() => { }, [])
 
@@ -261,13 +164,72 @@ export const Canvas: React.FC<IProps> = props => {
         setShapes(newShapes);
     }, [mouseInfo.mouseOffset, selectedId, shapes])
 
+    const updateShapeSize = useCallback((cursorX: number, cursorY: number) => {
+        if (hoveringCtrlPoint) {
+            setShapes(prevShapes => {
+                return prevShapes.map(shape => {
+                    if (shape.id === selectedId) {
+                        const newShape = calcResizedShape(cursorX, cursorY, shape, hoveringCtrlPoint);
+                        return newShape;
+                    } else return shape
+                })
+            });
+        }
+    }, [hoveringCtrlPoint, selectedId])
+
+
+    const ctrlPoints = useMemo(() => {
+        if (!selectedId) return null;
+        const shape = getShapeById(shapes, selectedId);
+        if (shape) {
+            return getCtrlPoints(shape);
+        }
+        return null;
+
+    }, [selectedId, shapes])
+
+    const handleDragover = (e: DragEvent) => {
+        e.preventDefault();
+    }
+
+    const handleDrop = useCallback((e: any) => {
+        const { offsetX, offsetY } = e;
+        const { name } = JSON.parse(e.dataTransfer.getData("json"));
+        addShape(name, offsetX, offsetY)
+    }, [addShape])
+
+    const handleDoubleClick = useCallback((e: MouseEvent) => {
+        const { offsetX, offsetY } = e;
+        startEditing(offsetX, offsetY);
+    }, [startEditing])
+
+    const handleMouseDown = useCallback((e: MouseEvent) => {
+        const { offsetX, offsetY } = e;
+        if (e.target === inputRef.current) return;
+        selectShape(offsetX, offsetY);
+    }, [selectShape])
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (mouseInfo?.isDown && selectedId) {
-            const { offsetX, offsetY } = e;
-            updateShapesPosition(offsetX, offsetY);
+        const { offsetX, offsetY } = e;
+        const [ hoveringShape ] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
+        hoveringShape ? setHoveringId(hoveringShape.id) : setHoveringId("");
+        // 设置鼠标悬停的控制点
+        if (selectedId) {
+            const shape = getShapeById(shapes, selectedId);
+            if (shape && ctrlPoints) {
+                const ctrlPoint = getIntersectedControlPoint(offsetX, offsetY, shape, ctrlPoints);
+                setHoveringCtrlPoint(ctrlPoint)
+            }
         }
-    }, [mouseInfo?.isDown, selectedId, updateShapesPosition])
+        if (mouseInfo?.isDown && selectedId) {
+            if (hoveringCtrlPoint) {
+                updateShapeSize(offsetX, offsetY);
+            } else {
+                updateShapesPosition(offsetX, offsetY);
+            }
+            // const { offsetX, offsetY } = e;
+        }
+    }, [ctrlPoints, hoveringCtrlPoint, mouseInfo?.isDown, selectedId, shapes, updateShapeSize, updateShapesPosition])
 
     const handleMouseUp = useCallback((e: MouseEvent) => {
         setMouseInfo({
@@ -297,8 +259,7 @@ export const Canvas: React.FC<IProps> = props => {
                 ...style,
                 left: editingShape.x - INPUT_OFFSET.x,
                 top: editingShape.y - INPUT_OFFSET.y,
-                width: `${100}px`,
-                // height: `${100}px`,
+                width: `${editingShape.width}px`,
             }
         }
         return style;
@@ -306,16 +267,20 @@ export const Canvas: React.FC<IProps> = props => {
 
     return useMemo(() => {
         return (
-            <div
-                className="comp-canvas"
-                onDragOver={handleDragover}
-                onDrop={(e) => handleDrop(e.nativeEvent)}
-                onMouseDown={(e) => handleMouseDown(e.nativeEvent)}
-                onMouseMove={(e) => handleMouseMove(e.nativeEvent)}
-                onMouseUp={(e) => handleMouseUp(e.nativeEvent)}
-                onDoubleClick={(e) => handleDoubleClick(e.nativeEvent)}
-            >
-                <canvas id='drawing' width={CANVAS_WIDTH} height={CANVAS_HEITHT} ref={canvasRef}>这是一个画布</canvas>
+            <div className="comp-canvas">
+                <canvas
+                    onDragOver={handleDragover}
+                    onDrop={(e) => handleDrop(e.nativeEvent)}
+                    onMouseDown={(e) => handleMouseDown(e.nativeEvent)}
+                    onMouseMove={(e) => handleMouseMove(e.nativeEvent)}
+                    onMouseUp={(e) => handleMouseUp(e.nativeEvent)}
+                    onDoubleClick={(e) => handleDoubleClick(e.nativeEvent)}
+                    id='drawing'
+                    width={CANVAS_WIDTH}
+                    height={CANVAS_HEITHT}
+                    ref={canvasRef}>
+                    这是一个画布
+                </canvas>
                 {editingId && <input
                     style={inputStyle}
                     className='input-text'

@@ -1,6 +1,6 @@
 import React, { ChangeEventHandler, DragEvent, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EDirection, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IPoint, IShape, calcResizedShape, cursorDirectionMap, drawLine, drawShape, getCtrlPoints, getInitShapeData, getIntersectedControlPoint, getMousePos, getShapeById, isPointInShape } from './common';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EDirection, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IPoint, IShape, calcResizedShape, cursorDirectionMap, drawGrid, drawLine, drawShape, getCtrlPoints, getInitShapeData, getIntersectedControlPoint, getMousePos, getShapeById, isPointInShape } from './common';
 import { getCryptoUuid } from '../../utils/util';
 import { HistoryManager } from './HistoryManager';
 import { EShape } from '../Toolbar/common';
@@ -30,6 +30,7 @@ export const Canvas: React.FC<IProps> = props => {
     const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(null);
     // 鼠标悬停在形状上
     const [hoveringId, setHoveringId] = useState<string>("");
+    const [isResizing, setIsResizing] = useState<boolean>(false);
 
     useEffect(() => {
         if (canvasRef.current && !ctxRef.current) {
@@ -37,6 +38,9 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [])
 
+    useEffect(() => {
+        // ctxRef.current && drawGrid(ctxRef.current);
+    }, [])
     // 鼠标移动到缩放点时，光标样式修改
     useEffect(() => {
         if (canvasRef.current) {
@@ -55,6 +59,7 @@ export const Canvas: React.FC<IProps> = props => {
     useEffect(() => {
         if (ctxRef.current) {
             clearCanvas();
+            drawGrid(ctxRef.current);
             drawShape(ctxRef.current, shapes, selectedId, hoveringId);
         }
     }, [clearCanvas, hoveringId, selectedId, shapes])
@@ -211,7 +216,7 @@ export const Canvas: React.FC<IProps> = props => {
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         const { offsetX, offsetY } = e;
-        const [ hoveringShape ] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
+        const [hoveringShape] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
         hoveringShape ? setHoveringId(hoveringShape.id) : setHoveringId("");
         // 设置鼠标悬停的控制点
         if (selectedId) {

@@ -4,6 +4,7 @@ import { EShape } from "../Toolbar/common";
 export const STROKE_WIDTH = 2; // 描边尺寸
 export const CANVAS_WIDTH = 800; // 画布宽
 export const CANVAS_HEITHT = 600; // 画布高
+const GRID_SIZE = 20; // 背景网格线之间的间距
 
 const CTRL_POINT_HALF_SIZE = 5; // 缩放控制点半边长
 const COMMON_SHAPE_SIZE = 100; // 形状边长
@@ -285,6 +286,30 @@ export const getIntersectedControlPoint = (pointX: number, pointY: number, shape
     return null;
 }
 
+export const drawGrid = (ctx: CanvasRenderingContext2D) => {
+    // ctx.strokeStyle = "#e0e0e0"; // 网格线的颜色
+    ctx.strokeStyle = "#e0e0e0"; // 网格线的颜色
+    ctx.lineWidth = 1;
+    const width = CANVAS_WIDTH;
+    const height = CANVAS_HEITHT;
+    // 绘制竖线
+    for (let x = 0; x <= width; x += GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    // 绘制横线
+    for (let y = 0; y <= height; y += GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+        ctx.closePath();
+    }
+}
 /**
  * 绘制选中边框
  * @param ctx 

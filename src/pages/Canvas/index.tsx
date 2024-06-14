@@ -214,7 +214,7 @@ export const Canvas: React.FC<IProps> = props => {
     const handleMouseMove = useCallback((e: MouseEvent) => {
         const { offsetX, offsetY } = e;
         const [hoveringShape] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
-        hoveringShape ? setHoveringId(hoveringShape.id) : setHoveringId("");
+        (hoveringShape && hoveringShape.id !== selectedId) ? setHoveringId(hoveringShape.id) : setHoveringId("");
         // 设置鼠标悬停的控制点
         if (selectedId) {
             const shape = getShapeById(shapes, selectedId);
@@ -259,7 +259,8 @@ export const Canvas: React.FC<IProps> = props => {
         if (editingShape) {
             style = {
                 ...style,
-                left: editingShape.x - INPUT_OFFSET.x,
+                // left: editingShape.x - INPUT_OFFSET.x,
+                left: "50%",
                 top: editingShape.y - INPUT_OFFSET.y,
                 width: `${editingShape.width}px`,
             }

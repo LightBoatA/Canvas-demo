@@ -1,6 +1,6 @@
 import { getCryptoUuid } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
-import { COMMON_SHAPE_SIZE } from "./constant";
+import { COMMON_SHAPE_SIZE, INIT_SHAPES } from "./constant";
 import { IShape, IShapeData } from "./types";
 
 /**
@@ -12,32 +12,13 @@ import { IShape, IShapeData } from "./types";
  */
 export const getInitShapeData = (name: EShape, x: number, y: number): IShape => {
     const id = getCryptoUuid();
-    let data: IShapeData = {} as any;
-    switch (name) {
-        case EShape.RECT:
-            data = {}
-            break;
-        case EShape.CIRCLE:
-            data = {
-                radius: COMMON_SHAPE_SIZE / 2,
-                startAngle: 0,
-                endAngle: 2 * Math.PI,
-                counterclockwise: false,
-            }
-            break;
-        default:
-            break;
-    }
+    const shapeData = INIT_SHAPES[name];
 
     return {
-        type: name,
+        ...shapeData,
         id,
-        data,
         x,
         y,
-        text: "",
-        width: COMMON_SHAPE_SIZE,
-        height: COMMON_SHAPE_SIZE,
     }
 }
 

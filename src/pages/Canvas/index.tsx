@@ -1,8 +1,8 @@
 import React, { ChangeEventHandler, DragEvent, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EDirection, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IPoint, IShape, calcResizedShape, cursorDirectionMap, drawGrid, drawLine, drawShape, getCtrlPoints, getInitShapeData, getIntersectedControlPoint, getMousePos, getShapeById, isPointInShape } from './common';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EDirection, GRID_SIZE, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IPoint, IShape, calcResizedShape, cursorDirectionMap, drawGrid, drawLine, drawShape, getCtrlPoints, getInitShapeData, getIntersectedControlPoint, getMousePos, getShapeById, getSnapXY, isPointInShape } from './common/index';
 import { getCryptoUuid } from '../../utils/util';
-import { HistoryManager } from './HistoryManager';
+import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 
 interface IProps {
@@ -38,9 +38,6 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [])
 
-    useEffect(() => {
-        // ctxRef.current && drawGrid(ctxRef.current);
-    }, [])
     // 鼠标移动到缩放点时，光标样式修改
     useEffect(() => {
         if (canvasRef.current) {

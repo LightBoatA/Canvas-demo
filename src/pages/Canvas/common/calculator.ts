@@ -1,4 +1,4 @@
-import { CTRL_POINT_HALF_SIZE, GRID_SIZE } from "./constant";
+import { CTRL_POINT_HALF_SIZE, GRID_SIZE, STRING_CONNECTOR } from "./constant";
 import { IShape, ICtrlPoint, EDirection } from "./types";
 
 /**
@@ -159,4 +159,26 @@ export const getMousePos = (e: MouseEvent) => {
         x: e.offsetX,
         y: e.offsetY,
     }
+}
+
+/**
+ * 获取与某坐标点相交的连接点信息（shapeId-connectionPointDirection）
+ * @param shapes 
+ * @param x 
+ * @param y 
+ * @returns 
+ */
+export const getIntersectedConnectionPointInfo = (shapes: IShape[], x: number, y: number) => {
+    for (let i = 0; i < shapes.length; i++) {
+        const points = shapes[i].connectionPoints;
+        for (let j = 0; j < points.length; j++) {
+            if (Math.abs(x - points[j].x) < 3 &&
+                Math.abs(y - points[j].y) < 3
+            ) {
+                return `${shapes[i].id}${STRING_CONNECTOR}${points[j].direction}`
+            }
+
+        }
+    }
+    return '';
 }

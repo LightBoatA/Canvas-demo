@@ -1,5 +1,11 @@
 import { EShape } from "../../Toolbar/common";
 
+export enum EConnectPointDirection {
+    "LEFT" = "LEFT",
+    "TOP" = "TOP",
+    "RIGHT" = "RIGHT",
+    "BOTTOM" = "BOTTOM",
+}
 export interface IPoint {
     x: number;
     y: number;
@@ -10,6 +16,9 @@ export interface IMouseInfo {
     mouseOffset: IPoint;
 }
 
+export interface IConnectionPoint extends IPoint {
+    direction: EConnectPointDirection;
+}
 export interface IShape {
     id: string;
     type: EShape;
@@ -19,7 +28,22 @@ export interface IShape {
     width: number;
     height: number;
     text: string;
+    connectionPoints: IConnectionPoint[]
 }
+
+
+export interface IConnection {
+    from: string; // fromShapeId-fromConnectionPointId
+    to: string;
+}
+
+// export interface ISelectedConnectionPoint {
+
+// }
+// export interface IDashLine {
+//     from: IPoint,
+//     to: IPoint,
+// }
 
 export type IShapeData = IRectData | ICircleData;
 

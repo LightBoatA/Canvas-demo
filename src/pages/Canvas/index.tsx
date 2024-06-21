@@ -1,6 +1,6 @@
 import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IConnection, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IShape, STRING_CONNECTOR, calcResizedShape, cursorDirectionMap, drawShape, getCtrlPoints, getInitShapeData, getIntersectedConnectionPointInfo, getIntersectedControlPoint, getShapeById, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EConnectPointDirection, IConnection, IConnectionPoint, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, STRING_CONNECTOR, calcResizedShape, cursorDirectionMap, drawShape, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getVirtualEndPoint, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 
@@ -23,10 +23,11 @@ export const Canvas: React.FC<IProps> = props => {
     const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(null);
     // 鼠标悬停在形状上
     const [hoveringId, setHoveringId] = useState<string>("");
-    const [fromConnectionPointInfo, setfromConnectionPointInfo] = useState<string>(""); // shapeId-connectionPointDirection
+    // const [fromConnectionPointInfo, setfromConnectionPointInfo] = useState<string>(""); // shapeId-connectionPointDirection
+    const [startConnectionPoint, setStartConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
     const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
     const [connections, setConnections] = useState<IConnection[]>([]);
-    const [hoveringConnectionPointInfo, setHoveringConnectionPointInfo] = useState<string>("");// shapeId-connectionPointDirection
+    const [hoveringConnectionPoint, setHoveringConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
 
     useEffect(() => {
         if (canvasRef.current && !ctxRef.current) {
@@ -57,12 +58,12 @@ export const Canvas: React.FC<IProps> = props => {
                 shapes,
                 selectedId,
                 hoveringId,
-                null,
+                preparedConnection,
                 connections,
-                hoveringConnectionPointInfo
+                hoveringConnectionPoint
             );
         }
-    }, [clearCanvas, connections, preparedConnection, hoveringConnectionPointInfo, hoveringId, selectedId, shapes])
+    }, [clearCanvas, connections, preparedConnection, hoveringConnectionPoint, hoveringId, selectedId, shapes])
 
     const handleUndo = useCallback(() => {
         const prevShapes = historyManager.undo();
@@ -221,9 +222,9 @@ export const Canvas: React.FC<IProps> = props => {
     const handleMouseDown = useCallback((e: MouseEvent) => {
         const { offsetX, offsetY } = e;
         if (e.target === inputRef.current) return;
-        const connectionPointInfo = getIntersectedConnectionPointInfo(shapes, offsetX, offsetY);
-        if (connectionPointInfo) {
-            setfromConnectionPointInfo(connectionPointInfo);
+        const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+        if (connectionPoint) {
+            setStartConnectionPoint(connectionPoint);
         } else {
             selectShape(offsetX, offsetY);
 
@@ -250,25 +251,40 @@ export const Canvas: React.FC<IProps> = props => {
                 updateShapesPosition(offsetX, offsetY);
             }
         }
-        // 从连接点到鼠标移动位置画虚线
-        if (fromConnectionPointInfo) {
-            const [shapeId, pointDirection] = fromConnectionPointInfo.split(STRING_CONNECTOR);
-            const curShape = getShapeById(shapes, shapeId);
-            const curPoint = curShape?.connectionPoints.find(point => point.direction === pointDirection);
 
-            // setPreparedConnection({
-            //     from: fromConnectionPointInfo,
-            //     to: { x: offsetX, y: offsetY }
-            // })
-        }
-        // hover目标连接点
-        const connectionPointInfo = getIntersectedConnectionPointInfo(shapes, offsetX, offsetY);
-        if (connectionPointInfo) {
-            setHoveringConnectionPointInfo(connectionPointInfo);
+        // hover连接点
+        const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+        if (connectionPoint) {
+            setHoveringConnectionPoint(connectionPoint);
         } else {
-            setHoveringConnectionPointInfo("");
+            setHoveringConnectionPoint(null);
         }
-    }, [ctrlPoints, fromConnectionPointInfo, hoveringCtrlPoint, mouseInfo?.isDown, selectedId, shapes, updateShapeSize, updateShapesPosition])
+
+        // 从连接点到鼠标移动位置画虚线
+        if (startConnectionPoint) {
+            const { shape, point } = startConnectionPoint;
+            const { x: fromX, y: fromY } = point;
+            let toShape: IShape, toPoint: IConnectionPoint;
+            // 鼠标移到了目标连接点上
+            if (connectionPoint) {
+                toShape = connectionPoint.shape;
+                toPoint = connectionPoint.point;
+            } else {
+                // 鼠标移到的地方没有形状及连接点
+                const endPoint = getVirtualEndPoint(offsetX, offsetY, fromX, fromY);
+                toShape = endPoint.shape;
+                toPoint = endPoint.point;
+            }
+
+            setPreparedConnection({
+                fromShape: shape,
+                fromPoint: point,
+                toPoint,
+                toShape,
+            })
+        }
+
+    }, [ctrlPoints, hoveringCtrlPoint, mouseInfo?.isDown, selectedId, shapes, startConnectionPoint, updateShapeSize, updateShapesPosition])
 
     const handleMouseUp = useCallback((e: MouseEvent) => {
         setMouseInfo({
@@ -276,22 +292,25 @@ export const Canvas: React.FC<IProps> = props => {
             isDown: false,
         });
         const { offsetX, offsetY } = e;
-        const connectionPointInfo = getIntersectedConnectionPointInfo(shapes, offsetX, offsetY);
-        if (connectionPointInfo) {
+        const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+        if (connectionPoint && startConnectionPoint) {
+            const { shape, point } = startConnectionPoint;
             setConnections(prevConnections => {
                 return [
                     ...prevConnections,
                     {
-                        from: fromConnectionPointInfo,
-                        to: connectionPointInfo,
+                        fromShape: shape,
+                        fromPoint: point,
+                        toShape: connectionPoint.shape,
+                        toPoint: connectionPoint.point,
                     }
                 ]
             })
         }
-        setfromConnectionPointInfo("");
+        setStartConnectionPoint(null);
         setPreparedConnection(null);
         historyManager.push(shapes);
-    }, [fromConnectionPointInfo, mouseInfo, shapes])
+    }, [mouseInfo, shapes, startConnectionPoint])
 
     const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setEditingText(e.target.value);

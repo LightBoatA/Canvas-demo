@@ -1,5 +1,6 @@
+import { EShape } from "../../Toolbar/common";
 import { CTRL_POINT_HALF_SIZE, GRID_SIZE, STRING_CONNECTOR } from "./constant";
-import { IShape, ICtrlPoint, EDirection } from "./types";
+import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection } from "./types";
 
 /**
  * 计算并返回某一形状的所有缩放控制点信息
@@ -168,17 +169,62 @@ export const getMousePos = (e: MouseEvent) => {
  * @param y 
  * @returns 
  */
-export const getIntersectedConnectionPointInfo = (shapes: IShape[], x: number, y: number) => {
+export const getIntersectedConnectionPoint = (shapes: IShape[], x: number, y: number) => {
     for (let i = 0; i < shapes.length; i++) {
         const points = shapes[i].connectionPoints;
         for (let j = 0; j < points.length; j++) {
             if (Math.abs(x - points[j].x) < 3 &&
                 Math.abs(y - points[j].y) < 3
             ) {
-                return `${shapes[i].id}${STRING_CONNECTOR}${points[j].direction}`
+                // return `${shapes[i].id}${STRING_CONNECTOR}${points[j].direction}`
+                return {
+                    shape: shapes[i],
+                    point: points[j],
+                }
             }
 
         }
     }
-    return '';
+    return null;
+}
+
+/**
+ * 根据鼠标位置，构造出虚拟结束连接点
+ * @param offsetX 鼠标坐标
+ * @param offsetY 
+ * @param startX 起始连接点的坐标
+ * @param startY 
+ * @returns 
+ */
+export const getVirtualEndPoint = (offsetX: number, offsetY: number, startX: number, startY: number): IShapeConnectionPoint => {
+    // 判断连线端点的箭头方向，与起始点作比较
+    // 左还是右
+    let dh = offsetX > startX ? EConnectPointDirection.LEFT : EConnectPointDirection.RIGHT;
+    // 上还是下
+    let dv = offsetY > startY ? EConnectPointDirection.TOP : EConnectPointDirection.BOTTOM;
+    const distenceH = Math.abs(offsetX - startX);
+    const distenceV = Math.abs(offsetY - startY);
+    let direction = distenceH > distenceV ? dh : dv;
+    // 构造出结束点
+    const point: IConnectionPoint = {
+        x: offsetX,
+        y: offsetY,
+        direction,
+    }
+    // 构造出结束形状
+    const shape: IShape = {
+        id: '',
+        type: EShape.RECT,
+        data: {},
+        x: offsetX,
+        y: offsetY,
+        width: 2,
+        height: 2,
+        text: "",
+        connectionPoints: [point]
+    }
+    return {
+        shape,
+        point,
+    }
 }

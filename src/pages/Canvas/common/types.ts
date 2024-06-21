@@ -31,19 +31,17 @@ export interface IShape {
     connectionPoints: IConnectionPoint[]
 }
 
-
-export interface IConnection {
-    from: string; // fromShapeId-fromConnectionPointId
-    to: string;
+export interface IShapeConnectionPoint {
+    shape: IShape,
+    point: IConnectionPoint
 }
 
-// export interface ISelectedConnectionPoint {
-
-// }
-// export interface IDashLine {
-//     from: IPoint,
-//     to: IPoint,
-// }
+export interface IConnection {
+    fromShape: IShape;
+    toShape: IShape;
+    fromPoint: IConnectionPoint;
+    toPoint: IConnectionPoint;
+}
 
 export type IShapeData = IRectData | ICircleData;
 

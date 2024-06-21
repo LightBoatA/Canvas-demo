@@ -3,7 +3,7 @@ import AStar from "../routers/AStar";
 import { computedProbablyPoints, getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
 import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_CONNECT_POINT, COLOR_DASHLINE, STRING_CONNECTOR, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
-import { IShape, ICircleData, IPoint, IConnection, EConnectPointDirection, IConnectionPoint } from "./types";
+import { IShape, ICircleData, IPoint, IConnection, EConnectPointDirection, IConnectionPoint, IShapeConnectionPoint } from "./types";
 import { getConnectionPointByDirection, getPointByConnectionPointInfo, getShapeById } from "./utils";
 
 export const drawGrid = (ctx: CanvasRenderingContext2D) => {
@@ -50,22 +50,30 @@ const drawControlPoints = (ctx: CanvasRenderingContext2D, shape: IShape) => {
  * @param ctx 
  * @param shape 
  */
-const drawConnectPoints = (ctx: CanvasRenderingContext2D, shape: IShape, connectionPointInfo: string) => {
-    const { connectionPoints } = shape;
-    const [shapeId, pointDirection] = connectionPointInfo.split(STRING_CONNECTOR);
-    // ctx.strokeStyle = COLOR_BORDER;
-    ctx.fillStyle = '#FFF';
-    ctx.lineWidth = 1;
-    connectionPoints.forEach(point => {
-        const { x: _x, y: _y } = point;
-        const ishovering = shapeId === shape.id && pointDirection === point.direction;
-        ctx.strokeStyle = ishovering ? COLOR_BORDER_HOVER : COLOR_BORDER;
-        ctx.lineWidth = ishovering ? 2 : 1;
-        ctx.beginPath();
-        ctx.arc(_x, _y, CONNECT_POINT_RADIUS, 0, 2 * Math.PI, false);
-        ctx.fill();
-        ctx.stroke();
-    })
+const drawConnectPoints = (ctx: CanvasRenderingContext2D, shape: IShape, hovingConnectionPoint: IShapeConnectionPoint | null) => {
+    console.log(shape, hovingConnectionPoint);
+    
+    // if (hovingConnectionPoint) {
+        const { connectionPoints } = shape;
+        // const { id: shapeId } = hovingConnectionPoint.shape;
+        // const { direction: pointDirection } = hovingConnectionPoint.point;
+        // const [shapeId, pointDirection] = connectionPointInfo.split(STRING_CONNECTOR);
+        // ctx.strokeStyle = COLOR_BORDER;
+        ctx.fillStyle = '#FFF';
+        ctx.lineWidth = 1;
+        connectionPoints.forEach(point => {
+            const { x: _x, y: _y } = point;
+            const ishovering = hovingConnectionPoint 
+            && hovingConnectionPoint.shape.id  === shape.id 
+            && hovingConnectionPoint.point.direction === point.direction;
+            ctx.strokeStyle = ishovering ? COLOR_BORDER_HOVER : COLOR_BORDER;
+            ctx.lineWidth = ishovering ? 2 : 1;
+            ctx.beginPath();
+            ctx.arc(_x, _y, CONNECT_POINT_RADIUS, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.stroke();
+        })
+    // }
 }
 
 /**
@@ -115,18 +123,7 @@ const drawLine = (ctx: CanvasRenderingContext2D, from: IPoint, to: IPoint) => {
     ctx.stroke();
 }
 
-/**
- * 绘制虚线
- * @param ctx 
- * @param dashLine 
- */
-// const drawDashLine = (ctx: CanvasRenderingContext2D, dashLine: IDashLine) => {
-//     const { from, to } = dashLine;
-//     ctx.setLineDash([5, 5]);
-//     ctx.strokeStyle = COLOR_DASHLINE;
-//     drawLine(ctx, from, to);
-//     ctx.setLineDash([]);
-// }
+
 
 /**
  * 用于测试连线路由选择辅助点绘制
@@ -190,6 +187,7 @@ const drawPolyLine = (ctx: CanvasRenderingContext2D, routes: number[][], lineDas
         ctx.lineTo(route[0], route[1]);
     })
     ctx.stroke();
+    ctx.setLineDash([]);
 }
 /**
  * 绘制连接线
@@ -199,23 +197,34 @@ const drawPolyLine = (ctx: CanvasRenderingContext2D, routes: number[][], lineDas
  */
 const drawConnections = (ctx: CanvasRenderingContext2D, shapes: IShape[], connections: IConnection[]) => {
     connections.forEach(connection => {
-        const { from, to } = connection;
-        // 获取连线起始点的 形状和连接点
-        const [fromShapeId, fromPointDirection] = from.split(STRING_CONNECTOR);
-        const fromShape = getShapeById(shapes, fromShapeId);
-        const fromPoint = getConnectionPointByDirection(fromShape?.connectionPoints || [], fromPointDirection as EConnectPointDirection);
-
-        // 获取连线终点的 形状和连接点
-        const [toShapeId, toPointDirection] = to.split(STRING_CONNECTOR);
-        const toShape = getShapeById(shapes, toShapeId);
-        const toPoint = getConnectionPointByDirection(toShape?.connectionPoints || [], toPointDirection as EConnectPointDirection);
-
+        const { fromShape, fromPoint, toShape, toPoint } = connection;
+        // 根据ID获取最新的xy,否则移动形状时不更新
+        const latestFromShape = shapes.find(shape => shape.id === fromShape.id);
+        const latestFromPoint = latestFromShape?.connectionPoints.find(point => point.direction === fromPoint.direction);
+        const latestToShape = shapes.find(shape => shape.id === toShape.id);
+        const latestToPoint = latestToShape?.connectionPoints.find(point => point.direction === toPoint.direction);
         // 获取路由数据
-        const routes = getConnectionRoutes(fromShape!, toShape!, fromPoint!, toPoint!);
+        const routes = getConnectionRoutes(
+            latestFromShape || fromShape,
+            latestToShape || toShape, 
+            latestFromPoint || fromPoint, 
+            latestToPoint || toPoint);
 
         // 绘制折线
         drawPolyLine(ctx, routes)
     })
+}
+
+/**
+ * 绘制连接线-虚线
+ * @param ctx 
+ * @param dashLine 
+ */
+const drawDashLine = (ctx: CanvasRenderingContext2D, preparedConnection: IConnection) => {
+    const { fromShape, toShape, fromPoint, toPoint } = preparedConnection;
+    const routes = getConnectionRoutes(fromShape,toShape, fromPoint, toPoint);
+    // 绘制折线
+    drawPolyLine(ctx, routes, [5, 5], COLOR_DASHLINE)
 }
 /**
  * 根据图形数据分类绘制图形，并对选中图形进行描边
@@ -228,9 +237,9 @@ export const drawShape = (
     shapes: IShape[],
     selectedId: string,
     hoveringId: string,
-    dashLine: null,
+    preparedConnection: IConnection | null,
     connections: IConnection[],
-    hoveringConnectionPointInfo: string, // shapeId-connectionPointDirection
+    hoveringConnectionPoint: IShapeConnectionPoint | null, // shapeId-connectionPointDirection
 ) => {
     if (ctx) {
         shapes.forEach(shape => {
@@ -259,8 +268,8 @@ export const drawShape = (
                 ctx.fill();
             }
             // 绘制连接点虚线
-            if (dashLine) {
-                // drawDashLine(ctx, dashLine);
+            if (preparedConnection) {
+                drawDashLine(ctx, preparedConnection);
             }
             // 绘制连接线
             if (connections && connections.length) {
@@ -269,12 +278,12 @@ export const drawShape = (
             // 绘制图形选中后的各种控制图形
             if (selectedId === shape.id) {
                 drawCtrlShape(ctx, shape);
-                drawConnectPoints(ctx, shape, hoveringConnectionPointInfo);
+                drawConnectPoints(ctx, shape, hoveringConnectionPoint);
             }
 
             if (hoveringId === shape.id) {
                 drawHoveringShape(ctx, shape);
-                drawConnectPoints(ctx, shape, hoveringConnectionPointInfo);
+                drawConnectPoints(ctx, shape, hoveringConnectionPoint);
             }
             // 绘制文字
             if (text) {

@@ -1,6 +1,6 @@
 import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IConnection, ICtrlPoint, IDashLine, IMouseInfo, INPUT_OFFSET, IShape, STRING_CONNECTOR, calcResizedShape, cursorDirectionMap, drawShape, getCtrlPoints, getInitShapeData, getIntersectedConnectionPointInfo, getIntersectedControlPoint, getShapeById, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IConnection, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IShape, STRING_CONNECTOR, calcResizedShape, cursorDirectionMap, drawShape, getCtrlPoints, getInitShapeData, getIntersectedConnectionPointInfo, getIntersectedControlPoint, getShapeById, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 
@@ -57,7 +57,7 @@ export const Canvas: React.FC<IProps> = props => {
                 shapes,
                 selectedId,
                 hoveringId,
-                preparedConnection,
+                null,
                 connections,
                 hoveringConnectionPointInfo
             );
@@ -256,10 +256,10 @@ export const Canvas: React.FC<IProps> = props => {
             const curShape = getShapeById(shapes, shapeId);
             const curPoint = curShape?.connectionPoints.find(point => point.direction === pointDirection);
 
-            setPreparedConnection({
-                from: fromConnectionPointInfo,
-                to: { x: offsetX, y: offsetY }
-            })
+            // setPreparedConnection({
+            //     from: fromConnectionPointInfo,
+            //     to: { x: offsetX, y: offsetY }
+            // })
         }
         // hover目标连接点
         const connectionPointInfo = getIntersectedConnectionPointInfo(shapes, offsetX, offsetY);

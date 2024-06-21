@@ -3,7 +3,7 @@ import AStar from "../routers/AStar";
 import { computedProbablyPoints, getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
 import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_CONNECT_POINT, COLOR_DASHLINE, STRING_CONNECTOR, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
-import { IShape, ICircleData, IPoint, IDashLine, IConnection, EConnectPointDirection, IConnectionPoint } from "./types";
+import { IShape, ICircleData, IPoint, IConnection, EConnectPointDirection, IConnectionPoint } from "./types";
 import { getConnectionPointByDirection, getPointByConnectionPointInfo, getShapeById } from "./utils";
 
 export const drawGrid = (ctx: CanvasRenderingContext2D) => {
@@ -120,13 +120,13 @@ const drawLine = (ctx: CanvasRenderingContext2D, from: IPoint, to: IPoint) => {
  * @param ctx 
  * @param dashLine 
  */
-const drawDashLine = (ctx: CanvasRenderingContext2D, dashLine: IDashLine) => {
-    const { from, to } = dashLine;
-    ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = COLOR_DASHLINE;
-    drawLine(ctx, from, to);
-    ctx.setLineDash([]);
-}
+// const drawDashLine = (ctx: CanvasRenderingContext2D, dashLine: IDashLine) => {
+//     const { from, to } = dashLine;
+//     ctx.setLineDash([5, 5]);
+//     ctx.strokeStyle = COLOR_DASHLINE;
+//     drawLine(ctx, from, to);
+//     ctx.setLineDash([]);
+// }
 
 /**
  * 用于测试连线路由选择辅助点绘制
@@ -228,7 +228,7 @@ export const drawShape = (
     shapes: IShape[],
     selectedId: string,
     hoveringId: string,
-    dashLine: IDashLine | null,
+    dashLine: null,
     connections: IConnection[],
     hoveringConnectionPointInfo: string, // shapeId-connectionPointDirection
 ) => {
@@ -260,7 +260,7 @@ export const drawShape = (
             }
             // 绘制连接点虚线
             if (dashLine) {
-                drawDashLine(ctx, dashLine);
+                // drawDashLine(ctx, dashLine);
             }
             // 绘制连接线
             if (connections && connections.length) {

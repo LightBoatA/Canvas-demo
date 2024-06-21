@@ -1,5 +1,5 @@
 import { EShape } from "../../Toolbar/common";
-import { CTRL_POINT_HALF_SIZE, GRID_SIZE, STRING_CONNECTOR } from "./constant";
+import { CTRL_POINT_HALF_SIZE, GRID_SIZE, SNAP_DISTANCE, STRING_CONNECTOR } from "./constant";
 import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection } from "./types";
 
 /**
@@ -143,17 +143,17 @@ export const calcResizedShape = (cursorX: number, cursorY: number, oldData: ISha
     }
 }
 
-/**
- * 获取对齐到网格的坐标点
- * @param x 
- * @param y 
- * @returns 
- */
-export const getSnapXY = (x: number, y: number) => {
-    const snapX = Math.round(x / GRID_SIZE) * GRID_SIZE;
-    const snapY = Math.round(y / GRID_SIZE) * GRID_SIZE;
-    return { x: snapX, y: snapY }
-}
+// /**
+//  * 获取对齐到网格的坐标点
+//  * @param x 
+//  * @param y 
+//  * @returns 
+//  */
+// export const getSnapXY = (x: number, y: number) => {
+//     const snapX = Math.round(x / GRID_SIZE) * GRID_SIZE;
+//     const snapY = Math.round(y / GRID_SIZE) * GRID_SIZE;
+//     return { x: snapX, y: snapY }
+// }
 
 export const getMousePos = (e: MouseEvent) => {
     return {
@@ -227,4 +227,48 @@ export const getVirtualEndPoint = (offsetX: number, offsetY: number, startX: num
         shape,
         point,
     }
+}
+
+
+export const getSnapXY = (x: number, y: number, width: number, height: number, hVals: number[], vVals: number[]) => {
+    // const yArr: number = [];
+    let snapX = x;
+    let snapY = y;
+    let found = false;
+    const top = y - height / 2;
+    const bottom = y + height / 2;
+    const left = x - width / 2;
+    const right = x + width / 2;
+
+    console.log(x, width, vVals);
+    
+    for (let i = 0; i < hVals.length; i++) {
+        // 上边靠近
+        // if (Math.abs(hVals[i] - top) <= SNAP_DISTANCE) {
+        //     snapY = hVals[i] + height / 2;
+        //     found = true;
+        // }
+        // // 上边靠近
+        // if (Math.abs(hVals[i] - bottom) <= SNAP_DISTANCE) {
+        //     snapY = hVals[i] - height / 2;
+        //     found = true;
+        // }
+        // 左边靠近
+        // if (Math.abs(vVals[i] - left) <= SNAP_DISTANCE) {
+        //     snapX = hVals[i] + width / 2;
+        //     found = true;
+        // }
+        // // 右边靠近
+        if (Math.abs(vVals[i] - right) <= SNAP_DISTANCE) {
+            
+            snapX = hVals[i] - width / 2;
+            // console.log(x, right, vVals[i], snapX);
+            found = true;
+        }
+        if (found) {
+            return { snapX, snapY }
+        }
+    }
+    return { snapX, snapY }
+
 }

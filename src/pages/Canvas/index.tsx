@@ -1,6 +1,6 @@
 import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EConnectPointDirection, IConnection, IConnectionPoint, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, STRING_CONNECTOR, calcResizedShape, cursorDirectionMap, drawShape, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getVirtualEndPoint, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, EConnectPointDirection, IConnection, IConnectionPoint, ICtrlPoint, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, STRING_CONNECTOR, calcResizedShape, cursorDirectionMap, drawHorizentalLine, drawShape, drawVerticalLine, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getSnapXY, getVirtualEndPoint, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 
@@ -50,6 +50,26 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [])
 
+    const horizontalVals = useMemo(() => {
+        const vals: number[] = [];
+        shapes.forEach(shape => {
+            const top = shape.y - shape.height / 2;
+            const bottom = shape.y + shape.height / 2;
+            vals.push(top, bottom);
+        })
+        return vals;
+    }, [shapes])
+
+    const verticalVals = useMemo(() => {
+        const vals: number[] = [];
+        shapes.forEach(shape => {
+            const left = shape.x - shape.width / 2;
+            const right = shape.x + shape.width / 2;
+            vals.push(left, right);
+        })
+        return vals;
+    }, [shapes])
+
     useEffect(() => {
         if (ctxRef.current) {
             clearCanvas();
@@ -62,8 +82,11 @@ export const Canvas: React.FC<IProps> = props => {
                 connections,
                 hoveringConnectionPoint
             );
+            drawHorizentalLine(ctxRef.current, horizontalVals);
+            drawVerticalLine(ctxRef.current, verticalVals);
+
         }
-    }, [clearCanvas, connections, preparedConnection, hoveringConnectionPoint, hoveringId, selectedId, shapes])
+    }, [clearCanvas, connections, preparedConnection, hoveringConnectionPoint, hoveringId, selectedId, shapes, horizontalVals, verticalVals])
 
     const handleUndo = useCallback(() => {
         const prevShapes = historyManager.undo();
@@ -156,29 +179,45 @@ export const Canvas: React.FC<IProps> = props => {
 
     const aaa = useCallback(() => { }, [])
 
+
+
     const updateShapesPosition = useCallback((newX: number, newY: number) => {
         const { x: mouseOffsetx, y: mouseOffsety } = mouseInfo.mouseOffset;
+
         const newShapes = shapes.map(shape => {
             if (shape.id === selectedId) {
-                const { x: oldShapeX, y: oldShapeY } = shape;
+                const { x: oldShapeX, y: oldShapeY, width, height } = shape;
                 const shapeX = newX - mouseOffsetx,
                     shapeY = newY - mouseOffsety;
+                const { snapX, snapY } = getSnapXY(shapeX, shapeY, width, height, horizontalVals, verticalVals);
+                // return {
+                //     ...shape,
+                //     x: shapeX,
+                //     y: shapeY,
+                //     connectionPoints: shape.connectionPoints.map(point => {
+                //         return {
+                //             ...point,
+                //             x: point.x + shapeX - oldShapeX,
+                //             y: point.y + shapeY - oldShapeY,
+                //         }
+                //     })
+                // }
                 return {
                     ...shape,
-                    x: shapeX,
-                    y: shapeY,
+                    x: snapX,
+                    y: snapY,
                     connectionPoints: shape.connectionPoints.map(point => {
                         return {
                             ...point,
-                            x: point.x + shapeX - oldShapeX,
-                            y: point.y + shapeY - oldShapeY,
+                            x: point.x + snapX - oldShapeX,
+                            y: point.y + snapY - oldShapeY,
                         }
                     })
                 }
             } else return shape
         })
         setShapes(newShapes);
-    }, [mouseInfo.mouseOffset, selectedId, shapes])
+    }, [horizontalVals, mouseInfo.mouseOffset, selectedId, shapes, verticalVals])
 
     const updateShapeSize = useCallback((cursorX: number, cursorY: number) => {
         if (hoveringCtrlPoint) {
@@ -212,6 +251,7 @@ export const Canvas: React.FC<IProps> = props => {
         const { offsetX, offsetY } = e;
         const { name } = JSON.parse(e.dataTransfer.getData("json"));
         addShape(name, offsetX, offsetY)
+
     }, [addShape])
 
     const handleDoubleClick = useCallback((e: MouseEvent) => {

@@ -51,9 +51,6 @@ const drawControlPoints = (ctx: CanvasRenderingContext2D, shape: IShape) => {
  * @param shape 
  */
 const drawConnectPoints = (ctx: CanvasRenderingContext2D, shape: IShape, hovingConnectionPoint: IShapeConnectionPoint | null) => {
-    console.log(shape, hovingConnectionPoint);
-    
-    // if (hovingConnectionPoint) {
         const { connectionPoints } = shape;
         // const { id: shapeId } = hovingConnectionPoint.shape;
         // const { direction: pointDirection } = hovingConnectionPoint.point;
@@ -244,15 +241,18 @@ export const drawShape = (
     if (ctx) {
         shapes.forEach(shape => {
             ctx.fillStyle = COLOR_SHAPE;
+            ctx.strokeStyle = COLOR_BORDER;
             ctx.lineWidth = STROKE_WIDTH;
             const { x, y, text, width, height } = shape;
             // 绘制形状
             if (shape.type === EShape.RECT) {
                 ctx.fillRect(x - width / 2, y - height / 2, width, height);
+                ctx.strokeRect(x - width / 2, y - height / 2, width, height);
             } else if (shape.type === EShape.CIRCLE) {
                 ctx.beginPath();
                 ctx.ellipse(x, y, width / 2, height / 2, 0, 0, 2 * Math.PI);
                 ctx.fill();
+                ctx.stroke();
             } else if (shape.type === EShape.DIAMOND) {
                 ctx.beginPath();
                 ctx.moveTo(x, y - height / 2); // 上方顶点
@@ -261,11 +261,13 @@ export const drawShape = (
                 ctx.lineTo(x - width / 2, y);
                 ctx.closePath();
                 ctx.fill();
+                ctx.stroke();
             } else if (shape.type === EShape.ROUNDED_RECT) {
                 ctx.beginPath()
                 ctx.roundRect(x - width / 2, y - height / 2, width, height, height / 2)
                 ctx.closePath();
                 ctx.fill();
+                ctx.stroke();
             }
             // 绘制连接点虚线
             if (preparedConnection) {
@@ -315,3 +317,25 @@ export const drawShape = (
 //     ctx.stroke();
 //     ctx.closePath();
 // }
+
+export const drawHorizentalLine = (ctx: CanvasRenderingContext2D, vals: number[]) => {
+    ctx.strokeStyle = 'orange';
+    ctx.lineWidth = 1;
+    vals.forEach(val => {
+        ctx.beginPath();
+        ctx.moveTo(0, val);
+        ctx.lineTo(CANVAS_WIDTH, val);
+        ctx.stroke();
+    })
+}
+
+export const drawVerticalLine = (ctx: CanvasRenderingContext2D, vals: number[]) => {
+    ctx.strokeStyle = 'orange';
+    ctx.lineWidth = 1;
+    vals.forEach(val => {
+        ctx.beginPath();
+        ctx.moveTo(val, 0);
+        ctx.lineTo(val, CANVAS_HEITHT);
+        ctx.stroke();
+    })
+}

@@ -2,7 +2,7 @@ import { EShape } from "../../Toolbar/common";
 import { getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
 import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
-import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData } from "./types";
+import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData } from "./types";
 
 export const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = COLOR_GRID; // 网格线的颜色
@@ -267,7 +267,7 @@ export const drawShape = (
             ctx.fillStyle = COLOR_SHAPE;
             ctx.strokeStyle = COLOR_BORDER;
             ctx.lineWidth = STROKE_WIDTH;
-            const { x, y, text, width, height } = shape;
+            const { x, y, text, width, height, data } = shape;
             // 绘制形状
             if (shape.type === EShape.RECT) {
                 ctx.fillRect(x - width / 2, y - height / 2, width, height);
@@ -289,6 +289,17 @@ export const drawShape = (
             } else if (shape.type === EShape.ROUNDED_RECT) {
                 ctx.beginPath()
                 ctx.roundRect(x - width / 2, y - height / 2, width, height, height / 2)
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (shape.type === EShape.PARALLELOGRAM) {
+                const rectangleEdge = ((data as IParallelogramData).tangentAlpha) * height;
+                const halfRectEdge = width / 2 - rectangleEdge;
+                ctx.beginPath();
+                ctx.moveTo(x - halfRectEdge, y - height / 2);
+                ctx.lineTo(x + width / 2,  y - height / 2);
+                ctx.lineTo(x + halfRectEdge, y + height / 2);
+                ctx.lineTo(x - width / 2, y + height / 2);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();

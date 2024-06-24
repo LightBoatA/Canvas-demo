@@ -1,5 +1,5 @@
 import { EShape } from "../../Toolbar/common";
-import { EDirection, IShape } from "./types";
+import { EDirection, IHelpLineData, IShape } from "./types";
 
 export const STROKE_WIDTH = 2; // 描边尺寸
 export const CANVAS_WIDTH = 800; // 画布宽
@@ -15,8 +15,10 @@ export const STRING_CONNECTOR = ':'; // 两个字符串组合的连接符，连�
 
 export const COLOR_CONNECT_POINT = "#FF6969";
 
-export const COLOR_SHAPE = "#EF9C66";
-export const COLOR_BORDER = "#365E32";
+// export const COLOR_SHAPE = "#EF9C66";#585e64
+export const COLOR_SHAPE = "#FFF";
+// export const COLOR_BORDER = "#365E32";
+export const COLOR_BORDER = "#585e64";
 export const COLOR_BORDER_HOVER = "#FF7F3E";
 export const COLOR_CTRL_POINT = "#365E32";
 export const COLOR_BG = "#FDFFE2";
@@ -70,8 +72,8 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         y: 0,
         text: "",
         data: {},
-        width: INIT_SHAPE_WIDTH,
-        height: 60,
+        width: INIT_SHAPE_WIDTH + 32,
+        height: 64,
         connectionPoints: [],
     },
     [EShape.ROUNDED_RECT as string]: {
@@ -80,8 +82,23 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         x: 0,
         y: 0,
         text: "",
-        data: {},
+        data: {
+            
+        },
         width: INIT_SHAPE_WIDTH,
+        height: INIT_SHAPE_WIDTH / 2,
+        connectionPoints: [],
+    },
+    [EShape.PARALLELOGRAM as string]: {
+        id: '',
+        type: EShape.PARALLELOGRAM,
+        x: 0,
+        y: 0,
+        text: "",
+        data: {
+            tangentAlpha: 0.6, // 平行四边形两边的三角，高/alpha角的对边 
+        },
+        width: INIT_SHAPE_WIDTH + 32,
         height: INIT_SHAPE_WIDTH / 2,
         connectionPoints: [],
     }
@@ -98,6 +115,11 @@ export const DEFAULT_MOUSE_INFO = {
         x: 0,
         y: 0
     }
+}
+
+export const DEFAULT_HELP_LINE_VAL: IHelpLineData = {
+    hVals: [],
+    vVals: [],
 }
 
 // 不同方向对应的缩放光标样式

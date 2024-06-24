@@ -1,6 +1,6 @@
 import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_MOUSE_INFO, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getSnapData, getVirtualEndPoint, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getSnapData, getVirtualEndPoint, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 
@@ -28,7 +28,7 @@ export const Canvas: React.FC<IProps> = props => {
     const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
     const [connections, setConnections] = useState<IConnection[]>([]);
     const [hoveringConnectionPoint, setHoveringConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
-    const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>({ hVals: [], vVals: [] });
+    const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
 
     useEffect(() => {
         if (canvasRef.current && !ctxRef.current) {
@@ -309,6 +309,7 @@ export const Canvas: React.FC<IProps> = props => {
         }
         setStartConnectionPoint(null);
         setPreparedConnection(null);
+        setHelpLineVals(DEFAULT_HELP_LINE_VAL)
         historyManager.push(shapes);
     }, [mouseInfo, shapes, startConnectionPoint])
 

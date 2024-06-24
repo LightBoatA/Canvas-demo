@@ -43,17 +43,18 @@ export interface IConnection {
     toPoint: IConnectionPoint;
 }
 
-export type IShapeData = IRectData | ICircleData;
+export type IShapeData = IRectData | ICircleData | IParallelogramData;
 
 export interface IRectData {
 
 }
 
 export interface ICircleData {
-    radius: number;
-    startAngle: number;
-    endAngle: number;
-    counterclockwise: boolean;
+
+}
+
+export interface IParallelogramData {
+    tangentAlpha: number;
 }
 
 export enum EDirection {

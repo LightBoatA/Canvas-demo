@@ -1,10 +1,8 @@
 import { EShape } from "../../Toolbar/common";
-import AStar from "../routers/AStar";
-import { computedProbablyPoints, getConnectionRoutes } from "../routers/utils";
+import { getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
-import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_CONNECT_POINT, COLOR_DASHLINE, STRING_CONNECTOR, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
-import { IShape, ICircleData, IPoint, IConnection, EConnectPointDirection, IConnectionPoint, IShapeConnectionPoint } from "./types";
-import { getConnectionPointByDirection, getPointByConnectionPointInfo, getShapeById } from "./utils";
+import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
+import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData } from "./types";
 
 export const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = COLOR_GRID; // 网格线的颜色
@@ -223,6 +221,31 @@ const drawDashLine = (ctx: CanvasRenderingContext2D, preparedConnection: IConnec
     // 绘制折线
     drawPolyLine(ctx, routes, [5, 5], COLOR_DASHLINE)
 }
+
+/**
+ * 绘制辅助线（对齐线）
+ * @param ctx 
+ * @param hVals 
+ * @param vVals 
+ */
+export const drawHelpLines = (ctx: CanvasRenderingContext2D, helpLine: IHelpLineData) => {
+    const { hVals, vVals } = helpLine;
+    ctx.strokeStyle = 'cyan';
+    ctx.lineWidth = 1;
+    hVals.forEach(val => {
+        ctx.beginPath();
+        ctx.moveTo(0, val);
+        ctx.lineTo(CANVAS_WIDTH, val);
+        ctx.stroke();
+    })
+    vVals.forEach(val => {
+        ctx.beginPath();
+        ctx.moveTo(val, 0);
+        ctx.lineTo(val, CANVAS_HEITHT);
+        ctx.stroke();
+    })
+}
+
 /**
  * 根据图形数据分类绘制图形，并对选中图形进行描边
  * @param ctx 
@@ -232,11 +255,12 @@ const drawDashLine = (ctx: CanvasRenderingContext2D, preparedConnection: IConnec
 export const drawShape = (
     ctx: CanvasRenderingContext2D | null,
     shapes: IShape[],
-    selectedId: string,
-    hoveringId: string,
-    preparedConnection: IConnection | null,
-    connections: IConnection[],
+    selectedId: string, // 选中的形状ID
+    hoveringId: string, // 鼠标悬停的形状ID
+    preparedConnection: IConnection | null, // 鼠标拖拽的连线虚线
+    connections: IConnection[], // 连线
     hoveringConnectionPoint: IShapeConnectionPoint | null, // shapeId-connectionPointDirection
+    helpLines: IHelpLineData, // 辅助对齐线
 ) => {
     if (ctx) {
         shapes.forEach(shape => {
@@ -282,7 +306,7 @@ export const drawShape = (
                 drawCtrlShape(ctx, shape);
                 drawConnectPoints(ctx, shape, hoveringConnectionPoint);
             }
-
+            // 绘制鼠标悬停到图形上的效果
             if (hoveringId === shape.id) {
                 drawHoveringShape(ctx, shape);
                 drawConnectPoints(ctx, shape, hoveringConnectionPoint);
@@ -296,46 +320,8 @@ export const drawShape = (
                 ctx.font = "14px sans-serif"
                 ctx.fillText(text, x, y);
             }
-
-            // 绘制hovering连接点
-            // if (hoveringConnectionPointInfo && 
-            //     hoveringConnectionPointInfo.split(STRING_CONNECTOR)[0] === shape.id) 
-            //     {
-            // }
+            // 绘制辅助线
+            drawHelpLines(ctx, helpLines);
         })
     }
-}
-
-// export const drawLine = (
-//     ctx: CanvasRenderingContext2D,
-//     beginPoint: IPoint,
-//     controlPoint: IPoint,
-//     endPoint: IPoint) => {
-//     ctx.beginPath();
-//     ctx.moveTo(beginPoint.x, beginPoint.y);
-//     ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
-//     ctx.stroke();
-//     ctx.closePath();
-// }
-
-export const drawHorizentalLine = (ctx: CanvasRenderingContext2D, vals: number[]) => {
-    ctx.strokeStyle = 'orange';
-    ctx.lineWidth = 1;
-    vals.forEach(val => {
-        ctx.beginPath();
-        ctx.moveTo(0, val);
-        ctx.lineTo(CANVAS_WIDTH, val);
-        ctx.stroke();
-    })
-}
-
-export const drawVerticalLine = (ctx: CanvasRenderingContext2D, vals: number[]) => {
-    ctx.strokeStyle = 'orange';
-    ctx.lineWidth = 1;
-    vals.forEach(val => {
-        ctx.beginPath();
-        ctx.moveTo(val, 0);
-        ctx.lineTo(val, CANVAS_HEITHT);
-        ctx.stroke();
-    })
 }

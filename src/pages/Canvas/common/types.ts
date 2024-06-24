@@ -68,3 +68,8 @@ export interface ICtrlPoint {
     y: number;
     direction: EDirection;
 }
+
+export interface IHelpLineData {
+    hVals: number[];
+    vVals: number[];
+}

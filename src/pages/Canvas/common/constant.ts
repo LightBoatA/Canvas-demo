@@ -10,7 +10,7 @@ export const CTRL_POINT_HALF_SIZE = 5; // 缩放控制点半边长
 export const COMMON_SHAPE_SIZE = 100; // 形状边长
 export const INIT_SHAPE_WIDTH = 100;
 export const CONNECT_POINT_RADIUS = 4;
-export const SNAP_DISTANCE = 5; // 吸附阈值
+export const SNAP_DISTANCE = 3; // 吸附阈值
 export const STRING_CONNECTOR = ':'; // 两个字符串组合的连接符，连接两个ID等
 
 export const COLOR_CONNECT_POINT = "#FF6969";

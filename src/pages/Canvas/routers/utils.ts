@@ -1,24 +1,10 @@
-import { EConnectPointDirection, IConnectionPoint, IPoint, IShape } from "../common";
+import { EConnectPointDirection, IConnectionPoint, IPoint, IShape, getRectBounds } from "../common";
 import AStar from "./AStar";
 import { MIN_DISTANCE } from './constant'
 
 let startRect: IShape, endRect: IShape;
 let easyMode = false;
 
-/**
- * 获取形状的边界坐标值
- * @param rect 
- * @returns 
- */
-export const getRectBounds = (rect: IShape) => {
-    const { x, y, width, height } = rect;
-    return {
-        top: y - height / 2,
-        right: x + width / 2,
-        bottom: y + height / 2,
-        left: x - width / 2
-    }
-}
 // 找出起点的下一个点或终点的前一个点（伪起点或伪终点）
 export const findStartNextOrEndPrePoint = (
     rect: IShape, // 可以根据实际类型进行更改

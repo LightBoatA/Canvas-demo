@@ -1,7 +1,24 @@
 import { getCryptoUuid } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
+import { getConnectionPointVal } from "./calculator";
 import { COMMON_SHAPE_SIZE, INIT_SHAPES, STRING_CONNECTOR } from "./constant";
-import { EConnectPointDirection, IConnectionPoint, IShape, IShapeData } from "./types";
+import { EConnectPointDirection, EDirection, IConnectionPoint, IShape, IShapeData } from "./types";
+
+
+/**
+ * 获取形状的边界坐标值
+ * @param rect 
+ * @returns 
+ */
+export const getRectBounds = (rect: IShape) => {
+    const { x, y, width, height } = rect;
+    return {
+        top: y - height / 2,
+        right: x + width / 2,
+        bottom: y + height / 2,
+        left: x - width / 2
+    }
+}
 
 /**
  * 根据不同形状种类，生成初始图形数据
@@ -15,10 +32,10 @@ export const getInitShapeData = (name: EShape, x: number, y: number): IShape => 
     const shapeData = INIT_SHAPES[name];
     const { width, height } = shapeData;
     const connectionPoints: IConnectionPoint[] = [
-        { x, y: y - height / 2, direction: EConnectPointDirection.TOP },
-        { x: x + width / 2, y, direction: EConnectPointDirection.RIGHT },
-        { x, y: y + height / 2, direction: EConnectPointDirection.BOTTOM },
-        { x: x - width / 2, y, direction: EConnectPointDirection.LEFT },
+        getConnectionPointVal(x, y, width, height, EConnectPointDirection.TOP),
+        getConnectionPointVal(x, y, width, height, EConnectPointDirection.RIGHT),
+        getConnectionPointVal(x, y, width, height, EConnectPointDirection.BOTTOM),
+        getConnectionPointVal(x, y, width, height, EConnectPointDirection.LEFT),
     ]
     return {
         ...shapeData,

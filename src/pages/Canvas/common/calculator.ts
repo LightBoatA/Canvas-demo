@@ -1,7 +1,8 @@
+import { connectionRouteCache } from ".";
 import { arrayDeduplication } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
-import { CTRL_POINT_HALF_SIZE, GRID_SIZE, SNAP_DISTANCE, STRING_CONNECTOR } from "./constant";
-import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection } from "./types";
+import { CTRL_POINT_HALF_SIZE, GRID_SIZE, HALF_LINE_WIDTH, SNAP_DISTANCE, STRING_CONNECTOR } from "./constant";
+import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint } from "./types";
 import { getRectBounds } from "./utils";
 
 /**
@@ -81,6 +82,44 @@ export const isPointInShape = (pointX: number, pointY: number, shape: IShape) =>
     return isPointInRect(pointX, pointY, x - width / 2, y - height / 2, width, height);
 }
 
+/**
+ * 判断鼠标点是否在连接线附近
+ * @param pointX 
+ * @param pointY 
+ * @param connectionId 
+ * @returns 
+ */
+export const isPointInLine = (pointX: number, pointY: number, connectionId: string) => {
+    const linePoints = connectionRouteCache[connectionId];
+    let res = false;
+    if (linePoints) {
+        for (let i = 1; i < linePoints.length; i++) {
+            // 判断是横线是竖线
+            const p1 = linePoints[i - 1];
+            const p2 = linePoints[i];
+            let x: number = 0, y: number = 0, width: number = 0, height: number = 0;
+            if (p1[0] === p2[0]) {
+                // 竖线
+                // 把线构造成 2倍HALF_LINE_WIDTH粗的矩形，再判断点是否相交
+                x = p1[0] - HALF_LINE_WIDTH;
+                y = Math.min(p1[1], p2[1]);
+                width = HALF_LINE_WIDTH * 2;
+                height = Math.abs(p1[1] - p2[1]);
+            } else if (p1[1] === p2[1]) {
+                // 横线
+                x = Math.min(p1[0], p2[0]);
+                y = p1[1] - HALF_LINE_WIDTH;
+                width = Math.abs(p1[0] - p2[0]);
+                height = HALF_LINE_WIDTH * 2;
+            }
+            if (isPointInRect(pointX, pointY, x, y, width, height)) {
+                res = true;
+                break;
+            }
+        }
+    }
+    return res;
+}
 /**
  * 根据图形数据及方向计算连接点数据
  * @param x 

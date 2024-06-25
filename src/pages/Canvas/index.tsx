@@ -1,8 +1,11 @@
-import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getSnapData, getVirtualEndPoint, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getSnapData, getVirtualEndPoint, isPointInLine, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
+import { getCryptoUuid } from '../../utils/util';
+import { Button, Typography } from 'antd';
+import ContextMenuModal from '../../components/ContextMenuModal';
 
 interface IProps {
 
@@ -15,7 +18,8 @@ export const Canvas: React.FC<IProps> = props => {
     const inputRef = useRef<HTMLInputElement>(null);
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
     const [shapes, setShapes] = useState<IShape[]>([]);
-    const [selectedId, setSelectedId] = useState<string>("");
+    const [selectedId, setSelectedId] = useState<string>(""); // 选中的形状
+    const [selectedConnectionId, setSelectedConnectionId] = useState<string>(""); // 选中连接线
     const [mouseInfo, setMouseInfo] = useState<IMouseInfo>(DEFAULT_MOUSE_INFO);
     const [editingText, setEditingText] = useState<string>("");
     const [editingId, setEditingId] = useState<string>("");
@@ -28,7 +32,10 @@ export const Canvas: React.FC<IProps> = props => {
     const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
     const [connections, setConnections] = useState<IConnection[]>([]);
     const [hoveringConnectionPoint, setHoveringConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
+    const [hoveringConnectionId, setHoveringConnectionId] = useState<string>("");
     const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
+    const [isShowContextMenu, setIsShowContextMenu] = useState<boolean>(false);
+    const [contextMenuModalStyle, setContextMenuModalStyle] = useState<CSSProperties>({ top: 0, left: 0, margin: 0 });
 
     useEffect(() => {
         if (canvasRef.current && !ctxRef.current) {
@@ -60,13 +67,37 @@ export const Canvas: React.FC<IProps> = props => {
                 shapes,
                 selectedId,
                 hoveringId,
+                selectedConnectionId,
+                hoveringConnectionId,
                 preparedConnection,
                 connections,
                 hoveringConnectionPoint,
                 helpLineVals,
             );
         }
-    }, [clearCanvas, connections, helpLineVals, hoveringConnectionPoint, hoveringId, preparedConnection, selectedId, shapes])
+    }, [clearCanvas, connections, helpLineVals, hoveringConnectionId, hoveringConnectionPoint, hoveringId, preparedConnection, selectedConnectionId, selectedId, shapes])
+
+    const handleContextMenu = useCallback((e: MouseEvent) => {
+        console.log(e);
+        
+        e.preventDefault();
+        const { clientX, clientY } = e;
+        setIsShowContextMenu(true);
+        setContextMenuModalStyle({
+            top: clientY,
+            left: clientX,
+            margin: 0
+        });
+    }, [])
+
+
+    useEffect(() => {
+        document.addEventListener("contextmenu", handleContextMenu);
+        
+        return () => {
+            document.removeEventListener("contextmenu", handleContextMenu);
+        }
+    }, [handleContextMenu])
 
     const handleUndo = useCallback(() => {
         const prevShapes = historyManager.undo();
@@ -128,6 +159,21 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [shapes])
 
+    const selectConnection = useCallback((offsetX: number, offsetY: number) => {
+        let hasSelected = false;
+        for (let i = connections.length - 1; i >= 0; i--) {
+            if (isPointInLine(offsetX, offsetY, connections[i].id)) {
+                setSelectedConnectionId(connections[i].id);
+                setHoveringConnectionId(""); // 有选中的了就去掉悬停的
+                hasSelected = true;
+                break;
+            }
+        }
+        if (!hasSelected) {
+            setSelectedConnectionId("");
+        }
+    }, [connections])
+
     const updateShapeText = useCallback((id: string, newText: string) => {
         setShapes(prevShapes => {
             return prevShapes.map(shape => {
@@ -158,7 +204,9 @@ export const Canvas: React.FC<IProps> = props => {
     }, [editingId])
 
     const aaa = useCallback(() => { }, [])
-
+    const handleDelete = useCallback(() => { 
+        console.log('开始删除！');
+    }, [])
     const updateShapesPosition = useCallback((newX: number, newY: number) => {
         const { x: mouseOffsetx, y: mouseOffsety } = mouseInfo.mouseOffset;
 
@@ -227,13 +275,16 @@ export const Canvas: React.FC<IProps> = props => {
             setStartConnectionPoint(connectionPoint);
         } else {
             selectShape(offsetX, offsetY);
-
+            selectConnection(offsetX, offsetY);
         }
-    }, [selectShape, shapes])
+    }, [selectConnection, selectShape, shapes])
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         const { offsetX, offsetY } = e;
         const [hoveringShape] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
+        const [hoveringConnection] = connections.filter(connection => isPointInLine(offsetX, offsetY, connection.id));
+        (hoveringConnection && hoveringConnection.id !== selectedConnectionId) ? setHoveringConnectionId(hoveringConnection.id) : setHoveringConnectionId("");
+        // selectConnection(offsetX, offsetY);
         (hoveringShape && hoveringShape.id !== selectedId) ? setHoveringId(hoveringShape.id) : setHoveringId("");
         // 设置鼠标悬停的控制点
         if (selectedId) {
@@ -277,6 +328,7 @@ export const Canvas: React.FC<IProps> = props => {
             }
 
             setPreparedConnection({
+                id: 'prepared-connection',
                 fromShape: shape,
                 fromPoint: point,
                 toPoint,
@@ -284,7 +336,7 @@ export const Canvas: React.FC<IProps> = props => {
             })
         }
 
-    }, [ctrlPoints, hoveringCtrlPoint, mouseInfo?.isDown, selectedId, shapes, startConnectionPoint, updateShapeSize, updateShapesPosition])
+    }, [connections, ctrlPoints, hoveringCtrlPoint, mouseInfo?.isDown, selectedConnectionId, selectedId, shapes, startConnectionPoint, updateShapeSize, updateShapesPosition])
 
     const handleMouseUp = useCallback((e: MouseEvent) => {
         setMouseInfo({
@@ -299,6 +351,7 @@ export const Canvas: React.FC<IProps> = props => {
                 return [
                     ...prevConnections,
                     {
+                        id: getCryptoUuid(),
                         fromShape: shape,
                         fromPoint: point,
                         toShape: connectionPoint.shape,
@@ -365,9 +418,24 @@ export const Canvas: React.FC<IProps> = props => {
                     onChange={handleTextChange}
                     onBlur={handleTextSubmit}
                 />}
+                <ContextMenuModal
+                    open={isShowContextMenu}
+                    style={contextMenuModalStyle}
+                    onCancel={() => {
+                        setIsShowContextMenu(false);
+                    }}>
+                    <div>
+                        <Typography.Link className="w100p" onClick={handleDelete}>
+                            <div className="context-menu-item">
+                                <span>删除</span>
+                                <span className="key">Delete</span>
+                            </div>
+                        </Typography.Link>
+                    </div>
+                </ContextMenuModal>
             </div>
         );
-    }, [editingId, editingText, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle]);
+    }, [contextMenuModalStyle, editingId, editingText, handleDelete, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle, isShowContextMenu]);
 };
 
 export default Canvas;

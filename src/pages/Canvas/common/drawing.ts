@@ -4,6 +4,9 @@ import { getCtrlPoints } from "./calculator";
 import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
 import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData } from "./types";
 
+// 连线id与连线路由点对应关系
+export let connectionRouteCache: { [key: string]: number[][] } = {}
+
 export const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = COLOR_GRID; // 网格线的颜色
     ctx.lineWidth = 1;
@@ -190,9 +193,17 @@ const drawPolyLine = (ctx: CanvasRenderingContext2D, routes: number[][], lineDas
  * @param shapes 
  * @param connections 
  */
-const drawConnections = (ctx: CanvasRenderingContext2D, shapes: IShape[], connections: IConnection[]) => {
+const drawConnections = (
+    ctx: CanvasRenderingContext2D, 
+    shapes: IShape[], 
+    connections: IConnection[], 
+    hoveringConnectionId: string,
+    selectedConnectionId: string,
+    ) => {
+    // 清除缓存
+    connectionRouteCache = {};
     connections.forEach(connection => {
-        const { fromShape, fromPoint, toShape, toPoint } = connection;
+        const { fromShape, fromPoint, toShape, toPoint, id } = connection;
         // 根据ID获取最新的xy,否则移动形状时不更新
         const latestFromShape = shapes.find(shape => shape.id === fromShape.id);
         const latestFromPoint = latestFromShape?.connectionPoints.find(point => point.direction === fromPoint.direction);
@@ -205,8 +216,16 @@ const drawConnections = (ctx: CanvasRenderingContext2D, shapes: IShape[], connec
             latestFromPoint || fromPoint, 
             latestToPoint || toPoint);
 
+        connectionRouteCache[id] = routes;
         // 绘制折线
-        drawPolyLine(ctx, routes)
+        
+        if (hoveringConnectionId === id) {
+            drawPolyLine(ctx, routes, [], COLOR_CTRL_POINT); // 悬停状态
+        } else if (selectedConnectionId === id) {
+            drawPolyLine(ctx, routes, [], 'orange'); // 选中状态
+        } else {
+            drawPolyLine(ctx, routes);
+        }
     })
 }
 
@@ -257,6 +276,8 @@ export const drawShape = (
     shapes: IShape[],
     selectedId: string, // 选中的形状ID
     hoveringId: string, // 鼠标悬停的形状ID
+    selectedConnectionId: string, // 选中的连接线ID
+    hoveringConnectionId: string, // 鼠标悬停的连接线ID
     preparedConnection: IConnection | null, // 鼠标拖拽的连线虚线
     connections: IConnection[], // 连线
     hoveringConnectionPoint: IShapeConnectionPoint | null, // shapeId-connectionPointDirection
@@ -310,7 +331,7 @@ export const drawShape = (
             }
             // 绘制连接线
             if (connections && connections.length) {
-                drawConnections(ctx, shapes, connections);
+                drawConnections(ctx, shapes, connections, hoveringConnectionId, selectedConnectionId);
             }
             // 绘制图形选中后的各种控制图形
             if (selectedId === shape.id) {
@@ -322,6 +343,7 @@ export const drawShape = (
                 drawHoveringShape(ctx, shape);
                 drawConnectPoints(ctx, shape, hoveringConnectionPoint);
             }
+
             // 绘制文字
             if (text) {
                 ctx.fillStyle = FONT_COLOR;

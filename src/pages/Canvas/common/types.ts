@@ -41,6 +41,7 @@ export interface IConnection {
     toShape: IShape;
     fromPoint: IConnectionPoint;
     toPoint: IConnectionPoint;
+    id: string;
 }
 
 export type IShapeData = IRectData | ICircleData | IParallelogramData;

@@ -6,6 +6,11 @@ export enum EConnectPointDirection {
     "RIGHT" = "RIGHT",
     "BOTTOM" = "BOTTOM",
 }
+
+export enum EElement {
+    "CONNECTION" = "CONNECTION",
+    "SHAPE" = "SHAPE",
+}
 export interface IPoint {
     x: number;
     y: number;

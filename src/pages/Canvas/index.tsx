@@ -1,6 +1,6 @@
 import React, { CSSProperties, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionPoint, getIntersectedControlPoint, getShapeById, getSnapData, getVirtualEndPoint, isPointInLine, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, EElement, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionId, getIntersectedConnectionPoint, getIntersectedControlPoint, getIntersectedShapeId, getShapeById, getSnapData, getVirtualEndPoint, isPointInLine, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 import { getCryptoUuid } from '../../utils/util';
@@ -19,6 +19,8 @@ export const Canvas: React.FC<IProps> = props => {
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
     const [shapes, setShapes] = useState<IShape[]>([]);
     const [selectedId, setSelectedId] = useState<string>(""); // 选中的形状
+    // const [selectedElements, setSelectedElements] = useState<{ id: string; type: EElement }[]>([]);
+    const [selectedMap, setSelectedMap] = useState<Map<string, EElement>>(new Map());
     const [selectedConnectionId, setSelectedConnectionId] = useState<string>(""); // 选中连接线
     const [mouseInfo, setMouseInfo] = useState<IMouseInfo>(DEFAULT_MOUSE_INFO);
     const [editingText, setEditingText] = useState<string>("");
@@ -73,9 +75,10 @@ export const Canvas: React.FC<IProps> = props => {
                 connections,
                 hoveringConnectionPoint,
                 helpLineVals,
+                selectedMap,
             );
         }
-    }, [clearCanvas, connections, helpLineVals, hoveringConnectionId, hoveringConnectionPoint, hoveringId, preparedConnection, selectedConnectionId, selectedId, shapes])
+    }, [clearCanvas, connections, helpLineVals, hoveringConnectionId, hoveringConnectionPoint, hoveringId, preparedConnection, selectedConnectionId, selectedId, selectedMap, shapes])
 
     const handleContextMenu = useCallback((e: MouseEvent) => {
         console.log(e);
@@ -267,6 +270,32 @@ export const Canvas: React.FC<IProps> = props => {
         startEditing(offsetX, offsetY);
     }, [startEditing])
 
+    const handleClick = useCallback((e: MouseEvent) => {
+        e.preventDefault();
+        const { offsetX, offsetY, ctrlKey } = e;
+        const intersectShapeId = getIntersectedShapeId(offsetX, offsetY, shapes);
+        const intersectConnectionId = getIntersectedConnectionId(offsetX, offsetY, connections);
+        const id = intersectShapeId || intersectConnectionId; // 同时只可能选中一种图形
+        if (ctrlKey && id) {
+            // 多选
+            const newMap = new Map(selectedMap);
+            if (selectedMap.has(id)) {
+                // 取消选择
+                newMap.delete(id);
+            } else {
+               // 添加选择
+               const type = intersectShapeId ? EElement.SHAPE : EElement.CONNECTION;
+               newMap.set(id, type) 
+            }
+            setSelectedMap(newMap);
+        } else {
+            // 单选
+            intersectShapeId && setSelectedMap(new Map([[intersectShapeId, EElement.SHAPE]]));
+            intersectConnectionId && setSelectedMap(new Map([[intersectConnectionId, EElement.CONNECTION]]));
+            !intersectShapeId && !intersectConnectionId && setSelectedMap(new Map());
+        }
+    }, [connections, selectedMap, shapes])
+
     const handleMouseDown = useCallback((e: MouseEvent) => {
         const { offsetX, offsetY } = e;
         if (e.target === inputRef.current) return;
@@ -394,6 +423,8 @@ export const Canvas: React.FC<IProps> = props => {
     }, [editingId, shapes])
 
     return useMemo(() => {
+        console.log('选中的图形：', Array.from(selectedMap));
+        
         return (
             <div className="comp-canvas">
                 <canvas
@@ -403,6 +434,7 @@ export const Canvas: React.FC<IProps> = props => {
                     onMouseMove={(e) => handleMouseMove(e.nativeEvent)}
                     onMouseUp={(e) => handleMouseUp(e.nativeEvent)}
                     onDoubleClick={(e) => handleDoubleClick(e.nativeEvent)}
+                    onClick={(e) => handleClick(e.nativeEvent)}
                     id='drawing'
                     width={CANVAS_WIDTH}
                     height={CANVAS_HEITHT}
@@ -435,7 +467,7 @@ export const Canvas: React.FC<IProps> = props => {
                 </ContextMenuModal>
             </div>
         );
-    }, [contextMenuModalStyle, editingId, editingText, handleDelete, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle, isShowContextMenu]);
+    }, [contextMenuModalStyle, editingId, editingText, handleClick, handleDelete, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle, isShowContextMenu, selectedMap]);
 };
 
 export default Canvas;

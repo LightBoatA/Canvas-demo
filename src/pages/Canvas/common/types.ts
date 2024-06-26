@@ -11,6 +11,14 @@ export enum EElement {
     "CONNECTION" = "CONNECTION",
     "SHAPE" = "SHAPE",
 }
+
+export enum EMode {
+    "DEFAULT" = "DEFAULT", // 无操作
+    "MOVE" = "MOVE", // 移动
+    "RESIZE" = "RESIZE", // 缩放
+    "ROTATE" = "ROTATE", // 旋转
+    "CONNECT" = "CONNECT", // 画连接线
+}
 export interface IPoint {
     x: number;
     y: number;
@@ -18,7 +26,8 @@ export interface IPoint {
 
 export interface IMouseInfo {
     isDown: boolean;
-    mouseOffset: IPoint;
+    rectOffset: { distanceX: number, distanceY: number }; // 选框相对于光标位置的偏移
+    offsetMap: Map<string, { distanceX: number, distanceY: number }>; // 图形相对于选框位置的偏移
 }
 
 export interface IConnectionPoint extends IPoint {
@@ -28,12 +37,19 @@ export interface IShape {
     id: string;
     type: EShape;
     data: IShapeData;
-    x: number;
+    x: number; // 中心点
     y: number;
     width: number;
     height: number;
     text: string;
     connectionPoints: IConnectionPoint[]
+}
+
+export interface IRect {
+    x: number; // 中心点
+    y: number;
+    width: number;
+    height: number;
 }
 
 export interface IShapeConnectionPoint {

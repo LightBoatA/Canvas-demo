@@ -2,7 +2,7 @@ import { EShape } from "../../Toolbar/common";
 import { getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
 import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
-import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, EElement } from "./types";
+import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, EElement, IRect } from "./types";
 import { getRectBounds } from "./utils";
 
 // 连线id与连线路由点对应关系
@@ -283,7 +283,7 @@ export const drawShape = (
     connections: IConnection[], // 连线
     hoveringConnectionPoint: IShapeConnectionPoint | null, // shapeId-connectionPointDirection
     helpLines: IHelpLineData, // 辅助对齐线
-    selectedMap: Map<string, EElement>, //选中的元素
+    multipleSelectRect: IRect | null, //选中的元素
 ) => {
     if (ctx) {
         // 绘制形状及形状附属图形
@@ -360,30 +360,10 @@ export const drawShape = (
             drawHelpLines(ctx, helpLines);
         })
         // 绘制多选框
-        const selectedShapes = shapes.filter(shape => selectedMap.has(shape.id));
-        const selectedConnections =  connections.filter(connection => selectedMap.has(connection.id)) || [];
-        const xArr: number[] = [];
-        const yArr: number[] = [];
-
-        selectedShapes.forEach(shape => {
-            const { top, left, right, bottom } = getRectBounds(shape);
-            xArr.push(left, right);
-            yArr.push(top, bottom);
-        })
-        selectedConnections.forEach(connection => {
-            const routes = connectionRouteCache[connection.id];
-            if (routes) {
-                routes.forEach(point => {
-                    xArr.push(point[0]);
-                    yArr.push(point[1]);
-                })
-            }
-        })
-        const minX = Math.min(...xArr),
-        maxX = Math.max(...xArr),
-        minY = Math.min(...yArr),
-        maxY = Math.max(...yArr);
-        ctx.strokeStyle = 'orange';
-        ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+        if (multipleSelectRect) {
+            const { x, y, width, height } = multipleSelectRect;
+            ctx.strokeStyle = 'orange';
+            ctx.strokeRect(x - width / 2 , y - height / 2, width, height);
+        }
     }
 }

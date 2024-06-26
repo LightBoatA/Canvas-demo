@@ -1,6 +1,6 @@
 import React, { CSSProperties, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
-import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, EElement, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionId, getIntersectedConnectionPoint, getIntersectedControlPoint, getIntersectedShapeId, getShapeById, getSnapData, getVirtualEndPoint, isPointInLine, isPointInShape } from './common/index';
+import { CANVAS_HEITHT, CANVAS_WIDTH, DEFAULT_HELP_LINE_VAL, DEFAULT_MOUSE_INFO, EElement, EMode, IConnection, IConnectionPoint, ICtrlPoint, IHelpLineData, IMouseInfo, INPUT_OFFSET, IShape, IShapeConnectionPoint, calcResizedShape, connectionRouteCache, cursorDirectionMap, drawShape, getConnectionPointVal, getCtrlPoints, getInitShapeData, getIntersectedConnectionId, getIntersectedConnectionPoint, getIntersectedControlPoint, getIntersectedShapeId, getRectBounds, getShapeById, getSnapData, getVirtualEndPoint, isPointInLine, isPointInShape } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 import { getCryptoUuid } from '../../utils/util';
@@ -38,6 +38,7 @@ export const Canvas: React.FC<IProps> = props => {
     const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
     const [isShowContextMenu, setIsShowContextMenu] = useState<boolean>(false);
     const [contextMenuModalStyle, setContextMenuModalStyle] = useState<CSSProperties>({ top: 0, left: 0, margin: 0 });
+    const [mode, setMode] = useState<EMode>(EMode.DEFAULT);
 
     useEffect(() => {
         if (canvasRef.current && !ctxRef.current) {
@@ -60,6 +61,46 @@ export const Canvas: React.FC<IProps> = props => {
         }
     }, [])
 
+    const selectedShapes = useMemo(() => {
+        if (selectedMap.size <= 0) return [];
+        return shapes.filter(shape => selectedMap.has(shape.id));
+    }, [selectedMap, shapes])
+
+    const multipleSelectRect = useMemo(() => {
+        if (selectedMap.size > 0) {
+            const selectedConnections = connections.filter(connection => selectedMap.has(connection.id)) || [];
+            const xArr: number[] = [];
+            const yArr: number[] = [];
+
+            selectedShapes.forEach(shape => {
+                const { top, left, right, bottom } = getRectBounds(shape);
+                xArr.push(left, right);
+                yArr.push(top, bottom);
+            })
+            selectedConnections.forEach(connection => {
+                const routes = connectionRouteCache[connection.id];
+                if (routes) {
+                    routes.forEach(point => {
+                        xArr.push(point[0]);
+                        yArr.push(point[1]);
+                    })
+                }
+            })
+            const minX = Math.min(...xArr),
+                maxX = Math.max(...xArr),
+                minY = Math.min(...yArr),
+                maxY = Math.max(...yArr);
+            return {
+                x: (maxX + minX) / 2,
+                y: (maxY + minY) / 2,
+                width: maxX - minX,
+                height: maxY - minY,
+            }
+        } else {
+            return null;
+        }
+
+    }, [connections, selectedMap, selectedShapes])
 
     useEffect(() => {
         if (ctxRef.current) {
@@ -75,14 +116,14 @@ export const Canvas: React.FC<IProps> = props => {
                 connections,
                 hoveringConnectionPoint,
                 helpLineVals,
-                selectedMap,
+                multipleSelectRect,
             );
         }
-    }, [clearCanvas, connections, helpLineVals, hoveringConnectionId, hoveringConnectionPoint, hoveringId, preparedConnection, selectedConnectionId, selectedId, selectedMap, shapes])
+    }, [clearCanvas, connections, helpLineVals, hoveringConnectionId, hoveringConnectionPoint, hoveringId, multipleSelectRect, preparedConnection, selectedConnectionId, selectedId, selectedMap, shapes])
 
     const handleContextMenu = useCallback((e: MouseEvent) => {
         console.log(e);
-        
+
         e.preventDefault();
         const { clientX, clientY } = e;
         setIsShowContextMenu(true);
@@ -96,7 +137,7 @@ export const Canvas: React.FC<IProps> = props => {
 
     useEffect(() => {
         document.addEventListener("contextmenu", handleContextMenu);
-        
+
         return () => {
             document.removeEventListener("contextmenu", handleContextMenu);
         }
@@ -133,49 +174,14 @@ export const Canvas: React.FC<IProps> = props => {
 
     const addShape = useCallback((name: EShape, offsetX: number, offsetY: number) => {
         const shape = getInitShapeData(name, offsetX, offsetY);
-        setSelectedId(shape.id);
+        // setSelectedId(shape.id);
+        setSelectedMap(new Map([[shape.id, EElement.SHAPE]]))
         setShapes(prevShapes => {
             const newShapes = [...prevShapes, shape];
             historyManager.push(newShapes);
             return newShapes;
         })
     }, [])
-
-    const selectShape = useCallback((offsetX: number, offsetY: number) => {
-        let hasSelected = false;
-        for (let i = shapes.length - 1; i >= 0; i--) {
-            if (isPointInShape(offsetX, offsetY, shapes[i])) {
-                setSelectedId(shapes[i].id);
-                setMouseInfo({
-                    isDown: true,
-                    mouseOffset: {
-                        x: offsetX - shapes[i].x,
-                        y: offsetY - shapes[i].y,
-                    }
-                })
-                hasSelected = true;
-                break;
-            }
-        }
-        if (!hasSelected) {
-            setSelectedId("");
-        }
-    }, [shapes])
-
-    const selectConnection = useCallback((offsetX: number, offsetY: number) => {
-        let hasSelected = false;
-        for (let i = connections.length - 1; i >= 0; i--) {
-            if (isPointInLine(offsetX, offsetY, connections[i].id)) {
-                setSelectedConnectionId(connections[i].id);
-                setHoveringConnectionId(""); // 有选中的了就去掉悬停的
-                hasSelected = true;
-                break;
-            }
-        }
-        if (!hasSelected) {
-            setSelectedConnectionId("");
-        }
-    }, [connections])
 
     const updateShapeText = useCallback((id: string, newText: string) => {
         setShapes(prevShapes => {
@@ -207,28 +213,37 @@ export const Canvas: React.FC<IProps> = props => {
     }, [editingId])
 
     const aaa = useCallback(() => { }, [])
-    const handleDelete = useCallback(() => { 
+    const handleDelete = useCallback(() => {
         console.log('开始删除！');
     }, [])
-    const updateShapesPosition = useCallback((newX: number, newY: number) => {
-        const { x: mouseOffsetx, y: mouseOffsety } = mouseInfo.mouseOffset;
 
-        const newShapes = shapes.map(shape => {
-            if (shape.id === selectedId) {
-                const { width, height, id } = shape;
-                const shapeX = newX - mouseOffsetx, shapeY = newY - mouseOffsety;
-                const { snapX, snapY, helpLine } = getSnapData(shapeX, shapeY, width, height, id, shapes);
-                setHelpLineVals(helpLine);
-                return {
-                    ...shape,
-                    x: snapX,
-                    y: snapY,
-                    connectionPoints: shape.connectionPoints.map(point => getConnectionPointVal(snapX, snapY, width, height, point.direction))
-                }
-            } else return shape
-        })
-        setShapes(newShapes);
-    }, [mouseInfo.mouseOffset, selectedId, shapes])
+    const updateElementsPosition = useCallback((newX: number, newY: number) => {
+        const { rectOffset, offsetMap } = mouseInfo;
+        if (multipleSelectRect) {
+            const { width: rectWidth, height: rectHeight } = multipleSelectRect;
+            const newRectX = newX - rectOffset.distanceX, newRectY = newY - rectOffset.distanceY;
+            const selectedShapeIds = selectedShapes.map(shape => shape.id);
+            const { snapX: rectSnapX, snapY: rectSnapY, helpLine } = getSnapData(newRectX, newRectY, rectWidth, rectHeight, selectedShapeIds, shapes);
+            setHelpLineVals(helpLine);
+            const newShapes = shapes.map(shape => {
+                if (selectedMap.has(shape.id)) {
+                    const { width, height, id } = shape;
+                    const distanceData = offsetMap.get(id);
+                    const distanceX = distanceData?.distanceX || 0;
+                    const distanceY = distanceData?.distanceY || 0;
+                    const shapeX = rectSnapX - distanceX, shapeY = rectSnapY - distanceY;
+                    return {
+                        ...shape,
+                        x: shapeX,
+                        y: shapeY,
+                        connectionPoints: shape.connectionPoints.map(point => getConnectionPointVal(shapeX, shapeY, width, height, point.direction))
+                    }
+                } else return shape
+            })
+            setShapes(newShapes);
+        }
+
+    }, [mouseInfo, multipleSelectRect, selectedMap, selectedShapes, shapes])
 
     const updateShapeSize = useCallback((cursorX: number, cursorY: number) => {
         if (hoveringCtrlPoint) {
@@ -270,9 +285,7 @@ export const Canvas: React.FC<IProps> = props => {
         startEditing(offsetX, offsetY);
     }, [startEditing])
 
-    const handleClick = useCallback((e: MouseEvent) => {
-        e.preventDefault();
-        const { offsetX, offsetY, ctrlKey } = e;
+    const selectElements = useCallback((offsetX: number, offsetY: number, ctrlKey: boolean) => {
         const intersectShapeId = getIntersectedShapeId(offsetX, offsetY, shapes);
         const intersectConnectionId = getIntersectedConnectionId(offsetX, offsetY, connections);
         const id = intersectShapeId || intersectConnectionId; // 同时只可能选中一种图形
@@ -283,9 +296,9 @@ export const Canvas: React.FC<IProps> = props => {
                 // 取消选择
                 newMap.delete(id);
             } else {
-               // 添加选择
-               const type = intersectShapeId ? EElement.SHAPE : EElement.CONNECTION;
-               newMap.set(id, type) 
+                // 添加选择
+                const type = intersectShapeId ? EElement.SHAPE : EElement.CONNECTION;
+                newMap.set(id, type)
             }
             setSelectedMap(newMap);
         } else {
@@ -294,61 +307,67 @@ export const Canvas: React.FC<IProps> = props => {
             intersectConnectionId && setSelectedMap(new Map([[intersectConnectionId, EElement.CONNECTION]]));
             !intersectShapeId && !intersectConnectionId && setSelectedMap(new Map());
         }
+
+
     }, [connections, selectedMap, shapes])
+
+    const handleClick = useCallback((e: MouseEvent) => {
+        const { offsetX, offsetY, ctrlKey } = e;
+        selectElements(offsetX, offsetY, ctrlKey);
+    }, [selectElements])
 
     const handleMouseDown = useCallback((e: MouseEvent) => {
         const { offsetX, offsetY } = e;
         if (e.target === inputRef.current) return;
         const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
         if (connectionPoint) {
+            // 画线
+            setMode(EMode.CONNECT);
             setStartConnectionPoint(connectionPoint);
-        } else {
-            selectShape(offsetX, offsetY);
-            selectConnection(offsetX, offsetY);
-        }
-    }, [selectConnection, selectShape, shapes])
-
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        const { offsetX, offsetY } = e;
-        const [hoveringShape] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
-        const [hoveringConnection] = connections.filter(connection => isPointInLine(offsetX, offsetY, connection.id));
-        (hoveringConnection && hoveringConnection.id !== selectedConnectionId) ? setHoveringConnectionId(hoveringConnection.id) : setHoveringConnectionId("");
-        // selectConnection(offsetX, offsetY);
-        (hoveringShape && hoveringShape.id !== selectedId) ? setHoveringId(hoveringShape.id) : setHoveringId("");
-        // 设置鼠标悬停的控制点
-        if (selectedId) {
-            const shape = getShapeById(shapes, selectedId);
-            if (shape && ctrlPoints) {
-                const ctrlPoint = getIntersectedControlPoint(offsetX, offsetY, shape, ctrlPoints);
-                setHoveringCtrlPoint(ctrlPoint)
+        } else if (multipleSelectRect && selectedShapes) {
+            // 移动
+            // 判断光标是否与已选图形相交
+            const pointInRectShape = selectedShapes.find(shape => isPointInShape(offsetX, offsetY, shape))
+            if (pointInRectShape) {
+                setMode(EMode.MOVE)
+                console.log('此处设置的');
+                
+                const { x: rectX, y: rectY } = multipleSelectRect;
+                // 记录选框内的x,y，与初始移动光标位置的偏移量
+                const rectOffset = {
+                    distanceX: offsetX - rectX,
+                    distanceY: offsetY - rectY,
+                }
+                // 记录选框内的每个形状，相对于选框中心坐标的偏移
+                const offsetMap = new Map<string, { distanceX: number, distanceY: number }>();
+                selectedShapes.forEach(shape => {
+                    offsetMap.set(shape.id, {
+                        distanceX: rectX - shape.x,
+                        distanceY: rectY - shape.y,
+                    })
+                })
+                setMouseInfo({
+                    isDown: true,
+                    rectOffset,
+                    offsetMap,
+                })
             }
+            // selectShape(offsetX, offsetY);
+            // selectConnection(offsetX, offsetY);
+            // selectElements(offsetX, offsetY, ctrlKey);
         }
-        // 移动或缩放
-        if (mouseInfo?.isDown && selectedId) {
-            if (hoveringCtrlPoint) {
-                updateShapeSize(offsetX, offsetY);
-            } else {
-                updateShapesPosition(offsetX, offsetY);
-            }
-        }
+    }, [multipleSelectRect, selectedShapes, shapes])
 
-        // hover连接点
-        const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
-        if (connectionPoint) {
-            setHoveringConnectionPoint(connectionPoint);
-        } else {
-            setHoveringConnectionPoint(null);
-        }
-
+    const drawVirtualConnection = useCallback((offsetX: number, offsetY: number) => {
         // 从连接点到鼠标移动位置画虚线
         if (startConnectionPoint) {
             const { shape, point } = startConnectionPoint;
             const { x: fromX, y: fromY } = point;
             let toShape: IShape, toPoint: IConnectionPoint;
             // 鼠标移到了目标连接点上
-            if (connectionPoint) {
-                toShape = connectionPoint.shape;
-                toPoint = connectionPoint.point;
+            if (hoveringConnectionPoint) {
+                toShape = hoveringConnectionPoint.shape;
+                toPoint = hoveringConnectionPoint.point;
             } else {
                 // 鼠标移到的地方没有形状及连接点
                 const endPoint = getVirtualEndPoint(offsetX, offsetY, fromX, fromY);
@@ -364,14 +383,55 @@ export const Canvas: React.FC<IProps> = props => {
                 toShape,
             })
         }
+    }, [hoveringConnectionPoint, startConnectionPoint])
 
-    }, [connections, ctrlPoints, hoveringCtrlPoint, mouseInfo?.isDown, selectedConnectionId, selectedId, shapes, startConnectionPoint, updateShapeSize, updateShapesPosition])
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        const { offsetX, offsetY } = e;
+        const [hoveringShape] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
+        const [hoveringConnection] = connections.filter(connection => isPointInLine(offsetX, offsetY, connection.id));
+        // 设置悬停连接线
+        (hoveringConnection && hoveringConnection.id !== selectedConnectionId) ? setHoveringConnectionId(hoveringConnection.id) : setHoveringConnectionId("");
+        // 设置悬停形状
+        (hoveringShape && hoveringShape.id !== selectedId) ? setHoveringId(hoveringShape.id) : setHoveringId("");
+        // 设置悬停缩放控制点
+        if (selectedId) {
+            const shape = getShapeById(shapes, selectedId);
+            if (shape && ctrlPoints) {
+                const ctrlPoint = getIntersectedControlPoint(offsetX, offsetY, shape, ctrlPoints);
+                setHoveringCtrlPoint(ctrlPoint)
+            }
+        }
+        // 设置悬停连接点
+        const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+        connectionPoint ? setHoveringConnectionPoint(connectionPoint) : setHoveringConnectionPoint(null);
+        // 移动或缩放
+        // if (mouseInfo?.isDown && selectedId) {
+        //     if (hoveringCtrlPoint) {
+        //         updateShapeSize(offsetX, offsetY);
+        //     } else {
+        //         updateShapesPosition(offsetX, offsetY);
+        //     }
+        // }
+        switch (mode) {
+            case EMode.MOVE:
+                updateElementsPosition(offsetX, offsetY);
+                break;
+            case EMode.RESIZE:
+                break;
+            case EMode.CONNECT:
+                drawVirtualConnection(offsetX, offsetY);
+                break;
+            default:
+                break;
+        }
+    }, [connections, ctrlPoints, drawVirtualConnection, mode, selectedConnectionId, selectedId, shapes, updateElementsPosition])
 
     const handleMouseUp = useCallback((e: MouseEvent) => {
         setMouseInfo({
             ...mouseInfo,
             isDown: false,
         });
+        setMode(EMode.DEFAULT);
         const { offsetX, offsetY } = e;
         const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
         if (connectionPoint && startConnectionPoint) {
@@ -424,7 +484,7 @@ export const Canvas: React.FC<IProps> = props => {
 
     return useMemo(() => {
         console.log('选中的图形：', Array.from(selectedMap));
-        
+
         return (
             <div className="comp-canvas">
                 <canvas

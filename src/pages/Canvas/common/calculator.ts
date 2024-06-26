@@ -290,11 +290,11 @@ export const getVirtualEndPoint = (offsetX: number, offsetY: number, startX: num
  * @param y 
  * @param width 
  * @param height 
- * @param id 
+ * @param ids 当前选中的形状id，对齐时不考虑这些形状
  * @param shapes 
  * @returns 
  */
-export const getSnapData = (x: number, y: number, width: number, height: number, id: string, shapes: IShape[]) => {
+export const getSnapData = (x: number, y: number, width: number, height: number, ids: string[], shapes: IShape[]) => {
 
     const hVals: number[] = [],  // 水平边缘线
         vVals: number[] = [],  // 垂直边缘线
@@ -302,7 +302,8 @@ export const getSnapData = (x: number, y: number, width: number, height: number,
         centerVVals: number[] = []; // 垂直中心线
 
     shapes.forEach(shape => {
-        if (shape.id !== id) {
+        // if (shape.id !== id) {
+        if (!ids.includes(shape.id)) {
             const { top, bottom, left, right } = getRectBounds(shape);
             hVals.push(top, bottom);
             vVals.push(left, right);

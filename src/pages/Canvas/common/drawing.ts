@@ -199,7 +199,6 @@ const drawConnections = (
     shapes: IShape[], 
     connections: IConnection[], 
     hoveringConnectionId: string,
-    selectedConnectionId: string,
     ) => {
     // 清除缓存
     connectionRouteCache = {};
@@ -222,8 +221,6 @@ const drawConnections = (
         
         if (hoveringConnectionId === id) {
             drawPolyLine(ctx, routes, [], COLOR_CTRL_POINT); // 悬停状态
-        } else if (selectedConnectionId === id) {
-            drawPolyLine(ctx, routes, [], 'orange'); // 选中状态
         } else {
             drawPolyLine(ctx, routes);
         }
@@ -275,9 +272,9 @@ export const drawHelpLines = (ctx: CanvasRenderingContext2D, helpLine: IHelpLine
 export const drawShape = (
     ctx: CanvasRenderingContext2D | null,
     shapes: IShape[],
-    selectedId: string, // 选中的形状ID
+    // selectedId: string, // 选中的形状ID
     hoveringId: string, // 鼠标悬停的形状ID
-    selectedConnectionId: string, // 选中的连接线ID
+    // selectedConnectionId: string, // 选中的连接线ID
     hoveringConnectionId: string, // 鼠标悬停的连接线ID
     preparedConnection: IConnection | null, // 鼠标拖拽的连线虚线
     connections: IConnection[], // 连线
@@ -334,13 +331,13 @@ export const drawShape = (
             }
             // 绘制连接线
             if (connections && connections.length) {
-                drawConnections(ctx, shapes, connections, hoveringConnectionId, selectedConnectionId);
+                drawConnections(ctx, shapes, connections, hoveringConnectionId);
             }
-            // 绘制图形选中后的各种控制图形
-            if (selectedId === shape.id) {
-                drawCtrlShape(ctx, shape);
-                drawConnectPoints(ctx, shape, hoveringConnectionPoint);
-            }
+            // // 绘制图形选中后的各种控制图形
+            // if (selectedId === shape.id) {
+            //     drawCtrlShape(ctx, shape);
+            //     drawConnectPoints(ctx, shape, hoveringConnectionPoint);
+            // }
             // 绘制鼠标悬停到图形上的效果
             if (hoveringId === shape.id) {
                 drawHoveringShape(ctx, shape);

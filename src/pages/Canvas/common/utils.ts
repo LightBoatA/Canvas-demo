@@ -1,8 +1,8 @@
 import { getCryptoUuid } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
-import { getConnectionPointVal, isPointInLine, isPointInShape } from "./calculator";
+import { calcMouseMoveInfo, calcMultipleSelectRect, getConnectionPointVal, isPointInLine, isPointInShape } from "./calculator";
 import { COMMON_SHAPE_SIZE, INIT_SHAPES, STRING_CONNECTOR } from "./constant";
-import { EConnectPointDirection, EDirection, IConnection, IConnectionPoint, IShape, IShapeData } from "./types";
+import { EConnectPointDirection, EDirection, EElement, IConnection, IConnectionPoint, IShape, IShapeData } from "./types";
 
 
 /**
@@ -69,18 +69,18 @@ export const getPointByConnectionPointInfo = (shapes: IShape[], connectionPointI
     return point;
 }
 
-export const getIntersectedShapeId = (pointX: number, pointY: number, shapes: IShape[] ) => {
-    let shapeId = '';
+export const getIntersectedShape = (shapes: IShape[], pointX: number, pointY: number) => {
+    let shape = null;
     for (let i = shapes.length - 1; i >= 0; i--) {
         if (isPointInShape(pointX, pointY, shapes[i])) {
-            shapeId = shapes[i].id;
+            shape = shapes[i];
             break;
         }
     }
-    return shapeId;
+    return shape;
 }
 
-export const getIntersectedConnectionId = (pointX: number, pointY: number, connections: IConnection[] ) => {
+export const getIntersectedConnectionId = (pointX: number, pointY: number, connections: IConnection[]) => {
     let connectionId = '';
     for (let i = connections.length - 1; i >= 0; i--) {
         if (isPointInLine(pointX, pointY, connections[i].id)) {
@@ -89,4 +89,10 @@ export const getIntersectedConnectionId = (pointX: number, pointY: number, conne
         }
     }
     return connectionId;
+}
+
+export const getMouseMoveInfo = (selectedMap: Map<string, EElement>, connections: IConnection[], selectedShapes: IShape[], offsetX: number, offsetY: number) => {
+    const newSelectRect = calcMultipleSelectRect(selectedMap, connections, selectedShapes);
+    const newMouseMoveInfo = calcMouseMoveInfo(newSelectRect, selectedShapes, offsetX, offsetY);
+    return newMouseMoveInfo;
 }

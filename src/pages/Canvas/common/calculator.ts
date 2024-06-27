@@ -1,8 +1,8 @@
 import { connectionRouteCache } from ".";
 import { arrayDeduplication } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
-import { CTRL_POINT_HALF_SIZE, GRID_SIZE, HALF_LINE_WIDTH, SNAP_DISTANCE, STRING_CONNECTOR } from "./constant";
-import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint } from "./types";
+import { CTRL_POINT_HALF_SIZE, DEFAULT_MOUSE_INFO, GRID_SIZE, HALF_LINE_WIDTH, SNAP_DISTANCE, STRING_CONNECTOR } from "./constant";
+import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint, EElement, IRect } from "./types";
 import { getRectBounds } from "./utils";
 
 /**
@@ -374,4 +374,63 @@ export const getSnapData = (x: number, y: number, width: number, height: number,
             vVals: arrayDeduplication(vHelpVals),
         }
     }
+}
+
+export const calcMultipleSelectRect = (selectedMap: Map<string, EElement>, connections: IConnection[], selectedShapes: IShape[]) => {
+    if (selectedMap.size > 0) {
+        const selectedConnections = connections.filter(connection => selectedMap.has(connection.id)) || [];
+        const xArr: number[] = [];
+        const yArr: number[] = [];
+
+        selectedShapes.forEach(shape => {
+            const { top, left, right, bottom } = getRectBounds(shape);
+            xArr.push(left, right);
+            yArr.push(top, bottom);
+        })
+        selectedConnections.forEach(connection => {
+            const routes = connectionRouteCache[connection.id];
+            if (routes) {
+                routes.forEach(point => {
+                    xArr.push(point[0]);
+                    yArr.push(point[1]);
+                })
+            }
+        })
+        const minX = Math.min(...xArr),
+            maxX = Math.max(...xArr),
+            minY = Math.min(...yArr),
+            maxY = Math.max(...yArr);
+        return {
+            x: (maxX + minX) / 2,
+            y: (maxY + minY) / 2,
+            width: maxX - minX,
+            height: maxY - minY,
+        }
+    } else {
+        return null;
+    }
+}
+
+export const calcMouseMoveInfo = (curRect: IRect | null, selectedShapes: IShape[], offsetX: number, offsetY: number) => {
+    if (curRect) {
+        const { x: rectX, y: rectY } = curRect;
+        // 记录选框内的x,y，与初始移动光标位置的偏移量
+        const rectOffset = {
+            distanceX: offsetX - rectX,
+            distanceY: offsetY - rectY,
+        }
+        // 记录选框内的每个形状，相对于选框中心坐标的偏移
+        const offsetMap = new Map<string, { distanceX: number, distanceY: number }>();
+        selectedShapes.forEach(shape => {
+            offsetMap.set(shape.id, {
+                distanceX: rectX - shape.x,
+                distanceY: rectY - shape.y,
+            })
+        })
+        return {
+            rectOffset,
+            offsetMap,
+        }
+    }
+    return DEFAULT_MOUSE_INFO;
 }

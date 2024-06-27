@@ -1,5 +1,5 @@
 import { EShape } from "../../Toolbar/common";
-import { EDirection, IHelpLineData, IMouseInfo, IShape } from "./types";
+import { EDirection, IHelpLineData, IMouseMoveInfo, IShape } from "./types";
 
 export const STROKE_WIDTH = 2; // 描边尺寸
 export const CANVAS_WIDTH = 800; // 画布宽
@@ -110,8 +110,7 @@ export const INPUT_OFFSET = {
     y: 10,
 }
 
-export const DEFAULT_MOUSE_INFO: IMouseInfo = {
-    isDown: false,
+export const DEFAULT_MOUSE_INFO: IMouseMoveInfo = {
     rectOffset: { distanceX: 0, distanceY: 0 },
     offsetMap: new Map(),
 }

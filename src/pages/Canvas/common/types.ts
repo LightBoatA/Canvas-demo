@@ -12,20 +12,20 @@ export enum EElement {
     "SHAPE" = "SHAPE",
 }
 
-export enum EMode {
+export enum EMouseMoveMode {
     "DEFAULT" = "DEFAULT", // 无操作
     "MOVE" = "MOVE", // 移动
     "RESIZE" = "RESIZE", // 缩放
     "ROTATE" = "ROTATE", // 旋转
     "CONNECT" = "CONNECT", // 画连接线
+    "BOX_SELECTION" = "BOX_SELECTION" // 框选
 }
 export interface IPoint {
     x: number;
     y: number;
 }
 
-export interface IMouseInfo {
-    isDown: boolean;
+export interface IMouseMoveInfo {
     rectOffset: { distanceX: number, distanceY: number }; // 选框相对于光标位置的偏移
     offsetMap: Map<string, { distanceX: number, distanceY: number }>; // 图形相对于选框位置的偏移
 }

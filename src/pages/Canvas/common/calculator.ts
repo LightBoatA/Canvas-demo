@@ -2,7 +2,7 @@ import { connectionRouteCache } from ".";
 import { arrayDeduplication } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
 import { CTRL_POINT_HALF_SIZE, DEFAULT_MOUSE_INFO, GRID_SIZE, HALF_LINE_WIDTH, SNAP_DISTANCE, STRING_CONNECTOR } from "./constant";
-import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint, EElement, IRect } from "./types";
+import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint, EElement, IRect, IBounds } from "./types";
 import { getRectBounds } from "./utils";
 
 /**
@@ -28,13 +28,13 @@ export const getCtrlPoints = (shape: IShape): ICtrlPoint[] => {
  * 判断某点是否在某个矩形区域内
  * @param pointX 
  * @param pointY 
- * @param x 
+ * @param x 左上角
  * @param y 
  * @param width 
  * @param height 
  * @returns 
  */
-const isPointInRect = (pointX: number, pointY: number, x: number, y: number, width: number, height: number) => {
+export const isPointInRect = (pointX: number, pointY: number, x: number, y: number, width: number, height: number) => {
     return pointX >= x
         && pointX <= x + width
         && pointY >= y
@@ -376,6 +376,13 @@ export const getSnapData = (x: number, y: number, width: number, height: number,
     }
 }
 
+/**
+ * 计算多选后生成的选框Rect数据
+ * @param selectedMap 选中的元素
+ * @param connections 连线
+ * @param selectedShapes 选中的图形
+ * @returns 选框Rect数据或null
+ */
 export const calcMultipleSelectRect = (selectedMap: Map<string, EElement>, connections: IConnection[], selectedShapes: IShape[]) => {
     if (selectedMap.size > 0) {
         const selectedConnections = connections.filter(connection => selectedMap.has(connection.id)) || [];
@@ -411,6 +418,14 @@ export const calcMultipleSelectRect = (selectedMap: Map<string, EElement>, conne
     }
 }
 
+/**
+ * 计算光标、选框与形状的偏移量信息
+ * @param curRect 选框
+ * @param selectedShapes 选中的形状 
+ * @param offsetX 光标位置
+ * @param offsetY 
+ * @returns 偏移信息
+ */
 export const calcMouseMoveInfo = (curRect: IRect | null, selectedShapes: IShape[], offsetX: number, offsetY: number) => {
     if (curRect) {
         const { x: rectX, y: rectY } = curRect;
@@ -433,4 +448,48 @@ export const calcMouseMoveInfo = (curRect: IRect | null, selectedShapes: IShape[
         }
     }
     return DEFAULT_MOUSE_INFO;
+}
+
+/**
+ * 找到框选框中的形状和连线
+ * @param bounds 选框边界 
+ * @param shapes 
+ * @param connections 
+ * @returns 选框包围的元素的Map
+ */
+export const findElementsInBox = (bounds: IBounds, shapes: IShape[], connections: IConnection[]): Map<string, EElement> => {
+    const { left: boxLeft, right: boxRight, top: boxTop, bottom: boxBottom } = bounds;
+    
+    // 找到框内的形状
+    const shapesInBox = shapes.filter(shape => {
+        const { left, top, right, bottom } = getRectBounds(shape);
+        return left > boxLeft && right < boxRight && top > boxTop && bottom < boxBottom;
+    }) || [];
+
+    // 找到框内的连线
+    const linesInBox = connections.filter(connection => {
+        const linePoints = connectionRouteCache[connection.id];
+        let intersect = true;
+        for (let i = 0; i < linePoints.length; i++) {
+            const [pointX, pointY] = linePoints[i];
+            const res = isPointInRect(pointX, pointY, boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
+            if (!res) {
+                intersect = false;
+                break;
+            }
+        }
+        return intersect;
+    }) || [];
+
+    // 存入map
+    const map = new Map<string, EElement>();
+
+    shapesInBox.forEach(shape => {
+        map.set(shape.id, EElement.SHAPE);
+    })
+    linesInBox.forEach(line => {
+        map.set(line.id, EElement.CONNECTION);
+    })
+
+    return map;
 }

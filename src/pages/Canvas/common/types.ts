@@ -52,6 +52,12 @@ export interface IRect {
     height: number;
 }
 
+export interface IBounds {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+}
 export interface IShapeConnectionPoint {
     shape: IShape,
     point: IConnectionPoint

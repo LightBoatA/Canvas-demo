@@ -1,5 +1,5 @@
 import { EShape } from "../../Toolbar/common";
-import { EDirection, IHelpLineData, IMouseMoveInfo, IShape } from "./types";
+import { EDirection, IHelpLineData, IMouseMoveInfo, IPoint, IShape } from "./types";
 
 export const STROKE_WIDTH = 2; // 描边尺寸
 export const CANVAS_WIDTH = 800; // 画布宽
@@ -29,6 +29,10 @@ export const COLOR_DASHLINE = "grey";
 export const COLOR_CONNECTION = "black";
 
 
+export const DEFAULT_POINT: IPoint = {
+    x: 0,
+    y: 0,
+}
 
 export const INIT_COMMON_SHAPE_DATA = {
 

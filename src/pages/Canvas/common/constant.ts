@@ -1,12 +1,12 @@
 import { EShape } from "../../Toolbar/common";
-import { EDirection, IHelpLineData, IMouseMoveInfo, IPoint, IShape } from "./types";
+import { EDirection, IHelpLineData, IMoveStartInfo, IPoint, IShape } from "./types";
 
 export const STROKE_WIDTH = 2; // 描边尺寸
 export const CANVAS_WIDTH = 800; // 画布宽
 export const CANVAS_HEITHT = 600; // 画布高
 export const GRID_SIZE = 10; // 背景网格线之间的间距
 
-export const CTRL_POINT_HALF_SIZE = 5; // 缩放控制点半边长
+export const CTRL_POINT_HALF_SIZE = 4; // 缩放控制点半边长
 export const COMMON_SHAPE_SIZE = 100; // 形状边长
 export const INIT_SHAPE_WIDTH = 100;
 export const CONNECT_POINT_RADIUS = 4;
@@ -24,6 +24,7 @@ export const COLOR_BORDER_HOVER = "#FF7F3E";
 export const COLOR_CTRL_POINT = "#365E32";
 export const COLOR_BG = "#FDFFE2";
 export const COLOR_GRID = "#E0E0E0";
+export const COLOR_SELECTED_COLOR = "#067bef"
 export const FONT_COLOR = "#000";
 export const COLOR_DASHLINE = "grey";
 export const COLOR_CONNECTION = "black";
@@ -114,7 +115,7 @@ export const INPUT_OFFSET = {
     y: 10,
 }
 
-export const DEFAULT_MOUSE_INFO: IMouseMoveInfo = {
+export const DEFAULT_MOUSE_INFO: IMoveStartInfo = {
     rectOffset: { distanceX: 0, distanceY: 0 },
     offsetMap: new Map(),
 }

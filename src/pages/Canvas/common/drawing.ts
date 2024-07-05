@@ -1,7 +1,7 @@
 import { EShape } from "../../Toolbar/common";
 import { getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
-import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_CTRL_POINT, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER } from "./constant";
+import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER, COLOR_SELECTED_COLOR, COLOR_CTRL_POINT } from "./constant";
 import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, EElement, IRect } from "./types";
 import { getRectBounds } from "./utils";
 
@@ -37,11 +37,14 @@ export const drawGrid = (ctx: CanvasRenderingContext2D) => {
  * @param ctx 
  * @param shape 
  */
-const drawControlPoints = (ctx: CanvasRenderingContext2D, shape: IShape) => {
-    const points = getCtrlPoints(shape);
+const drawControlPoints = (ctx: CanvasRenderingContext2D, rect: IRect) => {
+    const points = getCtrlPoints(rect);
     const halfSize = CTRL_POINT_HALF_SIZE;
-    ctx.fillStyle = COLOR_CTRL_POINT;
+    ctx.fillStyle = '#FFF';
+    ctx.strokeStyle = COLOR_SELECTED_COLOR;
+    ctx.lineWidth = 2;
     points.forEach(point => {
+        ctx.strokeRect(point.x, point.y, halfSize * 2, halfSize * 2);
         ctx.fillRect(point.x, point.y, halfSize * 2, halfSize * 2);
     });
 
@@ -87,15 +90,15 @@ const drawSelectedBorder = (ctx: CanvasRenderingContext2D, shape: IShape) => {
     ctx.strokeRect(x - width / 2, y - height / 2, width, height);
 }
 
-/**
- * 绘制选中边框、缩放控制点等控制类图形
- * @param ctx 
- * @param shape 
- */
-const drawCtrlShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
-    drawSelectedBorder(ctx, shape);
-    drawControlPoints(ctx, shape);
-}
+// /**
+//  * 绘制选中边框、缩放控制点等控制类图形
+//  * @param ctx 
+//  * @param shape 
+//  */
+// const drawCtrlShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
+//     drawSelectedBorder(ctx, shape);
+//     drawControlPoints(ctx, shape);
+// }
 
 /**
  * 绘制鼠标悬停状态下的边框
@@ -109,18 +112,18 @@ const drawHoveringShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
     ctx.strokeRect(x - width / 2, y - height / 2, width, height);
 }
 
-/**
- * 根据起止点绘制直线
- * @param ctx 
- * @param from 
- * @param to 
- */
-const drawLine = (ctx: CanvasRenderingContext2D, from: IPoint, to: IPoint) => {
-    ctx.beginPath();
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(to.x, to.y);
-    ctx.stroke();
-}
+// /**
+//  * 根据起止点绘制直线
+//  * @param ctx 
+//  * @param from 
+//  * @param to 
+//  */
+// const drawLine = (ctx: CanvasRenderingContext2D, from: IPoint, to: IPoint) => {
+//     ctx.beginPath();
+//     ctx.moveTo(from.x, from.y);
+//     ctx.lineTo(to.x, to.y);
+//     ctx.stroke();
+// }
 
 
 
@@ -359,8 +362,11 @@ export const drawShape = (
         // 绘制多选框
         if (multipleSelectRect) {
             const { x, y, width, height } = multipleSelectRect;
-            ctx.strokeStyle = 'orange';
+            ctx.strokeStyle = COLOR_SELECTED_COLOR;
+            // ctx.setLineDash([5, 5]);
             ctx.strokeRect(x - width / 2 , y - height / 2, width, height);
+            // ctx.setLineDash([]);
+            drawControlPoints(ctx, multipleSelectRect)
         }
     }
 }

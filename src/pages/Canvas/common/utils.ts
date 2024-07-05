@@ -2,7 +2,7 @@ import { getCryptoUuid } from "../../../utils/util";
 import { EShape } from "../../Toolbar/common";
 import { calcMouseMoveInfo, calcMultipleSelectRect, getConnectionPointVal, isPointInLine, isPointInShape } from "./calculator";
 import { COMMON_SHAPE_SIZE, INIT_SHAPES, STRING_CONNECTOR } from "./constant";
-import { EConnectPointDirection, EDirection, EElement, IBounds, IConnection, IConnectionPoint, IShape, IShapeData } from "./types";
+import { EConnectPointDirection, EDirection, EElement, IBounds, IConnection, IConnectionPoint, IRect, IShape, IShapeData } from "./types";
 
 
 /**
@@ -10,7 +10,7 @@ import { EConnectPointDirection, EDirection, EElement, IBounds, IConnection, ICo
  * @param rect 
  * @returns 
  */
-export const getRectBounds = (rect: IShape): IBounds => {
+export const getRectBounds = (rect: IRect): IBounds => {
     const { x, y, width, height } = rect;
     return {
         top: y - height / 2,

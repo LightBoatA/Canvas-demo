@@ -25,9 +25,17 @@ export interface IPoint {
     y: number;
 }
 
-export interface IMouseMoveInfo {
+// 移动起始信息
+export interface IMoveStartInfo {
     rectOffset: { distanceX: number, distanceY: number }; // 选框相对于光标位置的偏移
     offsetMap: Map<string, { distanceX: number, distanceY: number }>; // 图形相对于选框位置的偏移
+}
+
+// 缩放起始信息
+export interface IResizeStartInfo {
+    oldBox: IRect | null;
+    oldSelectedShapes: IShape[];
+    direction: EDirection;
 }
 
 export interface IConnectionPoint extends IPoint {
@@ -85,6 +93,7 @@ export interface IParallelogramData {
     tangentAlpha: number;
 }
 
+// 缩放控制点方向
 export enum EDirection {
     LEFT_TOP = 'LEFT_TOP',
     LEFT_BOTTOM = 'LEFT_BOTTOM',

@@ -50,6 +50,10 @@ const drawControlPoints = (ctx: CanvasRenderingContext2D, rect: IRect) => {
 
 }
 
+const drawRotationIcon = (ctx: CanvasRenderingContext2DSettings, rect: IRect) => {
+    
+}
+
 /**
  * 绘制连接点
  * @param ctx 
@@ -366,7 +370,8 @@ export const drawShape = (
             // ctx.setLineDash([5, 5]);
             ctx.strokeRect(x - width / 2 , y - height / 2, width, height);
             // ctx.setLineDash([]);
-            drawControlPoints(ctx, multipleSelectRect)
+            drawControlPoints(ctx, multipleSelectRect);
+
         }
     }
 }

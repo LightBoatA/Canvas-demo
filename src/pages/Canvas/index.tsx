@@ -17,44 +17,40 @@ import {
   IShapeConnectionPoint,
   calcMultipleSelectRect,
   calcResizedShape,
-  connectionRouteCache,
   cursorDirectionMap,
   drawShape,
   getConnectionPointVal,
-  getCtrlPoints,
   getInitShapeData,
   getIntersectedConnectionId,
   getIntersectedConnectionPoint,
   getIntersectedControlPoint,
   getIntersectedShape,
-  calcMouseMoveInfo,
-  getRectBounds,
-  getShapeById,
   getSnapData,
   getVirtualEndPoint,
   isPointInLine,
   isPointInShape,
   getMouseMoveInfo,
-  isPointInRect,
   IPoint,
   DEFAULT_POINT,
   IBounds,
   findElementsInBox,
-  IRect,
   EDirection,
   IResizeStartInfo
 } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
 import { getCryptoUuid } from '../../utils/util';
-import { Button, Typography } from 'antd';
+import { Typography } from 'antd';
 import ContextMenuModal from '../../components/ContextMenuModal';
 
-interface IProps {}
+interface IProps {
+  className?: string;
+}
 
 const historyManager = new HistoryManager<IShape[]>();
 
 export const Canvas: React.FC<IProps> = props => {
+  const { className } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -516,7 +512,7 @@ export const Canvas: React.FC<IProps> = props => {
 
   return useMemo(() => {
     return (
-      <div className="comp-canvas">
+      <div className={`comp-canvas ${className || ''}`}>
         <canvas
           onDragOver={handleDragover}
           onDrop={e => handleDrop(e.nativeEvent)}
@@ -550,7 +546,7 @@ export const Canvas: React.FC<IProps> = props => {
         </ContextMenuModal>
       </div>
     );
-  }, [boxStyles, contextMenuModalStyle, editingId, editingText, handleDelete, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle, isShowContextMenu, mode]);
+  }, [boxStyles, className, contextMenuModalStyle, editingId, editingText, handleDelete, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle, isShowContextMenu, mode]);
 };
 
 export default Canvas;

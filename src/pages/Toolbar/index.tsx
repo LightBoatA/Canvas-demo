@@ -3,10 +3,10 @@ import './index.less';
 import { DRAG_SHAPES, IDragShap } from './common';
 
 interface IProps {
-
+    className?: string;
 }
 export const Toolbar: React.FC<IProps> = props => {
-
+    const { className } = props;
     const handleDragStart = useCallback((e: DragEvent, shape: IDragShap) => {
         e.dataTransfer?.setData("json", JSON.stringify({
             name: shape.name,
@@ -14,7 +14,7 @@ export const Toolbar: React.FC<IProps> = props => {
     }, [])
     return useMemo(() => {
         return (
-            <div className="comp-toolbar">
+            <div className={`comp-toolbar ${className || ''}`}>
                 {
                     DRAG_SHAPES.map(shape => {
                         return <div
@@ -28,7 +28,7 @@ export const Toolbar: React.FC<IProps> = props => {
                 }
             </div>
         );
-    }, [handleDragStart]);
+    }, [className, handleDragStart]);
 };
 
 export default Toolbar;

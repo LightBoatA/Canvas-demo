@@ -39,10 +39,11 @@ import {
 } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
-import { getCryptoUuid } from '../../utils/util';
+import { getCryptoUuid, mapToObject, objectToMap } from '../../utils/util';
 import { Typography } from 'antd';
 import ContextMenuModal from '../../components/ContextMenuModal';
 import { useShapes } from '../../hooks/useShapes';
+import { useCommon } from '../../hooks/useCommon';
 
 interface IProps {
   className?: string;
@@ -57,7 +58,7 @@ export const Canvas: React.FC<IProps> = props => {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   // const [shapes, setShapes] = useState<IShape[]>([]);
   // 选中的元素
-  const [selectedMap, setSelectedMap] = useState<Map<string, EElement>>(new Map());
+  // const [selectedMap, setSelectedMap] = useState<Map<string, EElement>>(new Map());
   // 移动开始信息
   const [moveStartInfo, setMoveStartInfo] = useState<IMoveStartInfo>(DEFAULT_MOUSE_INFO);
   // 缩放开始信息
@@ -82,7 +83,8 @@ export const Canvas: React.FC<IProps> = props => {
   const [startPosition, setStartPosition] = useState<IPoint>(DEFAULT_POINT); // 框选起始点
   const [curPosition, setCurPosition] = useState<IPoint>(DEFAULT_POINT); // 框选当前点
 
-  const { shapes, setShapes, updateShapeById } = useShapes();
+  const { shapes, setShapes, updateShapeByIds } = useShapes();
+  const { selectedMap, setSelectedMap } = useCommon();
   // const selectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (canvasRef.current && !ctxRef.current) {
@@ -104,12 +106,13 @@ export const Canvas: React.FC<IProps> = props => {
   }, []);
 
   const selectedShapes = useMemo(() => {
-    if (selectedMap.size <= 0) return [];
-    return shapes.filter(shape => selectedMap.has(shape.id));
+    if (Object.keys(selectedMap).length <= 0) return [];
+    return shapes.filter(shape => selectedMap[shape.id]);
   }, [selectedMap, shapes]);
 
   const multipleSelectRect = useMemo(() => {
-    return calcMultipleSelectRect(selectedMap, connections, selectedShapes) || null;
+    const realMap = objectToMap<string, EElement>(selectedMap); // 锚点
+    return calcMultipleSelectRect(realMap, connections, selectedShapes) || null;
   }, [connections, selectedMap, selectedShapes]);
 
   useEffect(() => {
@@ -169,33 +172,33 @@ export const Canvas: React.FC<IProps> = props => {
 
   const addShape = useCallback((name: EShape, offsetX: number, offsetY: number) => {
     const shape = getInitShapeData(name, offsetX, offsetY);
-    setSelectedMap(new Map([[shape.id, EElement.SHAPE]]));
+    setSelectedMap({ [shape.id]: EElement.SHAPE });
 
     setShapes([
       ...shapes,
       shape
     ])
-  }, [setShapes, shapes]);
+  }, [setSelectedMap, setShapes, shapes]);
 
   const updateShapeText = useCallback((id: string, newText: string) => {
-    updateShapeById({
-      id, 
+    updateShapeByIds({
+      ids: [id], 
       key: 'text', 
       data: newText
     })
-  }, [updateShapeById]);
+  }, [updateShapeByIds]);
 
   const startEditing = useCallback(
     (x: number, y: number) => {
       const clickedShape = shapes.find(shape => isPointInShape(x, y, shape));
       if (clickedShape) {
-        setSelectedMap(new Map([[clickedShape.id, EElement.SHAPE]]));
+        setSelectedMap({ [clickedShape.id]: EElement.SHAPE });
         setEditingId(clickedShape.id);
         setEditingText(clickedShape.text);
         updateShapeText(clickedShape.id, '');
       }
     },
-    [shapes, updateShapeText]
+    [setSelectedMap, shapes, updateShapeText]
   );
 
   useEffect(() => {
@@ -230,20 +233,20 @@ export const Canvas: React.FC<IProps> = props => {
       bottom: top + height
     };
     const eleMap = findElementsInBox(bounds, shapes, connections);
-    setSelectedMap(eleMap);
-  }, [boxStyles, connections, shapes]);
+    setSelectedMap(mapToObject<string, EElement>(eleMap));
+  }, [boxStyles, connections, setSelectedMap, shapes]);
 
   const updateSelectionBox = useCallback((offsetX: number, offsetY: number) => {
     setCurPosition({ x: offsetX, y: offsetY });
   }, []);
 
   const handleDelete = useCallback(() => {
-    if (selectedMap.size > 0) {
-      setShapes(shapes.filter(shape => !selectedMap.has(shape.id)))
-      setConnections(oldConnection => oldConnection.filter(shape => !selectedMap.has(shape.id)));
-      setSelectedMap(new Map());
+    if (Object.keys(selectedMap).length > 0) {
+      setShapes(shapes.filter(shape => !selectedMap[shape.id]))
+      setConnections(oldConnection => oldConnection.filter(shape => !selectedMap[shape.id]));
+      setSelectedMap({});
     }
-  }, [selectedMap, setShapes, shapes]);
+  }, [selectedMap, setSelectedMap, setShapes, shapes]);
 
   const moveShapes = useCallback(
     (newX: number, newY: number) => {
@@ -256,7 +259,7 @@ export const Canvas: React.FC<IProps> = props => {
         const { snapX: rectSnapX, snapY: rectSnapY, helpLine } = getSnapData(newRectX, newRectY, rectWidth, rectHeight, selectedShapeIds, shapes);
         setHelpLineVals(helpLine);
         const newShapes = shapes.map(shape => {
-          if (selectedMap.has(shape.id)) {
+          if (selectedMap[shape.id]) {
             const { width, height, id } = shape;
             const distanceData = offsetMap.get(id);
             const distanceX = distanceData?.distanceX || 0;
@@ -369,11 +372,12 @@ export const Canvas: React.FC<IProps> = props => {
         });
       } else if (intersectedShape || intersectConnectionId) {
         // 与图形、连线相交：选择或移动
-        let newMap = new Map(selectedMap);
+        // let newMap = new Map(selectedMap);
+        let newMap = objectToMap<string, EElement>(selectedMap);
         const id = intersectedShape?.id || intersectConnectionId; // 同时只可能选中一种元素
         if (ctrlKey) {
           // 加选、减选
-          if (selectedMap.has(id)) {
+          if (selectedMap[id]) {
             newMap.delete(id);
           } else {
             const type = intersectedShape?.id ? EElement.SHAPE : EElement.CONNECTION;
@@ -398,16 +402,16 @@ export const Canvas: React.FC<IProps> = props => {
             newMap = new Map([[intersectConnectionId, EElement.CONNECTION]]);
           }
         }
-        setSelectedMap(newMap);
+        setSelectedMap(mapToObject<string, EElement>(newMap));
       } else {
         // 不与任何元素相交
         setStartPosition({ x: e.offsetX, y: e.offsetY });
         setCurPosition({ x: e.offsetX, y: e.offsetY });
         setMode(EMouseMoveMode.BOX_SELECTION);
-        setSelectedMap(new Map());
+        setSelectedMap({});
       }
     },
-    [connections, hoveringCtrlPoint?.direction, multipleSelectRect, selectedMap, selectedShapes, shapes]
+    [connections, hoveringCtrlPoint?.direction, multipleSelectRect, selectedMap, selectedShapes, setSelectedMap, shapes]
   );
 
   const handleMouseMove = useCallback(

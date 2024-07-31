@@ -10,13 +10,13 @@ export const useShapes = () => {
         dispatch(shapesActions.setShapes(data))
     }
 
-    const updateShapeById = (data: { id: string; key: keyof IShape; data: any }) => {
-        dispatch(shapesActions.updateShapeById(data))
+    const updateShapeByIds = (data: { ids: string[]; key: keyof IShape; data: any }) => {
+        dispatch(shapesActions.updateShapeByIds(data))
     }
 
     return { 
         shapes,
         setShapes,
-        updateShapeById
+        updateShapeByIds
     }
 }

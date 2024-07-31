@@ -20,19 +20,21 @@ export const shapesSlice = createSlice({
     // },
     // 整体替换
     setShapes(state, action) {
-        state.value = action.payload;
-    },
-    updateShapeById(
-      state,
-      action: PayloadAction<{ id: string; key: keyof IShape; data: any }>
-    ) {
-      const { id, key, data } = action.payload;
-      const shape = state.value.find(item => item.id === id);
-      if (shape) {
-        (shape as any)[key] = data; // 强制类型断言
-      }
+      state.value = action.payload;
     },
 
+    updateShapeByIds(
+      state,
+      action: PayloadAction<{ ids: string[]; key: keyof IShape; data: any }>
+    ) {
+      const { ids, key, data } = action.payload;
+      const shapes = state.value.filter(item => ids.includes(item.id));
+      if (shapes) {
+        shapes.forEach(shape => {
+          (shape as any)[key] = data; 
+        });
+      }
+    }
   }
 });
 

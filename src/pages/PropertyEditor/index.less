@@ -1,6 +1,5 @@
 .comp-property-editor {
     height: 50px;
-    border: 1px solid #b6b5b5;
     display: flex;
     align-items: center;
     padding: 0 20px;
@@ -12,6 +11,16 @@
         &:hover {
             background-color: #eaecee;
         }
+    }
+    position: relative;
+    .editor-mask {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.7);
+        z-index: 999;
     }
     .storke-color {
         background: url('./images/stroke-color.png') no-repeat center;
@@ -27,6 +36,11 @@
         background: url('./images/font-color.png') no-repeat center;
         background-size: 80%;
     }
+
+    // .font-size {
+    //     background: url('./images/font-size.png') no-repeat center;
+    //     background-size: 80%;
+    // }
     /* 按钮被点击 */
     .actived {
         background-color: #dfe2e5;

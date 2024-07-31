@@ -53,3 +53,32 @@ export const arrayDeduplication = (arr: any[]) => {
   const set = new Set<any>(arr);
   return Array.from(set);
 }
+
+type MapFromObject<K extends string | number, V> = Map<K, V>;
+
+/**
+ * 对象转Map
+ * @param obj 
+ * @returns 
+ */
+export const objectToMap = <K extends string | number, V>(obj: { [key in K]: V }): MapFromObject<K, V> => {
+  const map = new Map<K, V>();
+  Object.entries(obj).forEach(([key, value]) => {
+    map.set(key as K, value as V);
+  });
+  return map;
+};
+
+/**
+ * map转对象
+ * @param map 
+ * @returns 
+ */
+export const mapToObject = <K extends string | number, V>(map: MapFromObject<K, V>): { [key in K]: V } => {
+  const obj: { [key in K]: V } = {} as { [key in K]: V };
+  map.forEach((value, key) => {
+    obj[key] = value;
+  });
+  return obj;
+};
+

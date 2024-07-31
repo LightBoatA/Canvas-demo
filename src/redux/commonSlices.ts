@@ -3,13 +3,14 @@ import { StoreState } from './store';
 import { EElement } from '../pages/Canvas/common';
 
 export type ICommon = {
-  selectedMap: Map<string, EElement>
+  // selectedMap: Map<string, EElement>
+  selectedMap: { [key: string]: EElement }
 };
 export const COMMON = 'common';
 export const commonSlice = createSlice({
   name: COMMON, // 用作每个action的type的第一部分，reducer函数名为第二部分
   initialState: {
-    selectedMap: new Map()
+    selectedMap: {}
   },
   reducers: {
     setKeyValue(state, action: PayloadAction<{ key: keyof ICommon, value: any }>) {

@@ -1,4 +1,4 @@
-import { IShape } from "../Canvas/common"
+import { EElement, IShape } from "../Canvas/common"
 
 export const colorBtns: {
   iconClass: string,

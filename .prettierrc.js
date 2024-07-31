@@ -10,7 +10,7 @@ module.exports = {
   // 箭头函数参数括号
   arrowParens: 'avoid',
   // 在jsx中把'>' 是否单独放一行
-  jsxBracketSameLine: true,
+  // jsxBracketSameLine: true,
   // 使用默认的折行标准
   proseWrap: 'preserve',
   // 根据显示样式决定 html 要不要折行
@@ -18,5 +18,5 @@ module.exports = {
   // 换行符使用 crlf/lf/auto
   endOfLine: 'auto',
   // 每行最大宽度 300
-  printWidth: 300,
+  printWidth: 80,
 }

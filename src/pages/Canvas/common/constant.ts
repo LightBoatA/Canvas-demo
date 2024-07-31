@@ -59,6 +59,11 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         height: INIT_SHAPE_WIDTH / 2,
         data: {},
         connectionPoints: [],
+        strokeColor: COLOR_BORDER,
+        fillColor: COLOR_SHAPE,
+        fontColor: FONT_COLOR,
+        fontSize: 14,
+        lineWidth: 2,
     },
     [EShape.CIRCLE as string]: {
         id: '',
@@ -70,6 +75,11 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         width: INIT_SHAPE_WIDTH,
         height: INIT_SHAPE_WIDTH,
         connectionPoints: [],
+        strokeColor: COLOR_BORDER,
+        fillColor: COLOR_SHAPE,
+        fontColor: FONT_COLOR,
+        fontSize: 14,
+        lineWidth: 2,
     },
     [EShape.DIAMOND as string]: {
         id: '',
@@ -81,6 +91,11 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         width: INIT_SHAPE_WIDTH + 32,
         height: 64,
         connectionPoints: [],
+        strokeColor: COLOR_BORDER,
+        fillColor: COLOR_SHAPE,
+        fontColor: FONT_COLOR,
+        fontSize: 14,
+        lineWidth: 2,
     },
     [EShape.ROUNDED_RECT as string]: {
         id: '',
@@ -94,6 +109,11 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         width: INIT_SHAPE_WIDTH,
         height: INIT_SHAPE_WIDTH / 2,
         connectionPoints: [],
+        strokeColor: COLOR_BORDER,
+        fillColor: COLOR_SHAPE,
+        fontColor: FONT_COLOR,
+        fontSize: 14,
+        lineWidth: 2,
     },
     [EShape.PARALLELOGRAM as string]: {
         id: '',
@@ -107,6 +127,11 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         width: INIT_SHAPE_WIDTH + 32,
         height: INIT_SHAPE_WIDTH / 2,
         connectionPoints: [],
+        strokeColor: COLOR_BORDER,
+        fillColor: COLOR_SHAPE,
+        fontColor: FONT_COLOR,
+        fontSize: 14,
+        lineWidth: 2,
     }
 }
 // 文字输入框相对于形状中心坐标的偏移值

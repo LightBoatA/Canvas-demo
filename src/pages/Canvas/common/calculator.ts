@@ -292,7 +292,12 @@ export const getVirtualEndPoint = (offsetX: number, offsetY: number, startX: num
     width: 2,
     height: 2,
     text: '',
-    connectionPoints: [point]
+    connectionPoints: [point],
+    strokeColor: '',
+    fillColor: '',
+    fontColor: '',
+    fontSize: 0,
+    lineWidth: 0,
   };
   return {
     shape,

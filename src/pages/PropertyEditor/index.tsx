@@ -7,16 +7,18 @@ import {
   blue,
   grey
 } from '@ant-design/colors';
-import { ColorPicker, theme } from 'antd';
+import { ColorPicker, Space, theme } from 'antd';
 import type { ColorPickerProps } from 'antd';
 import './index.less';
+import { colorBtns } from './common';
+import { useShapes } from '../../hooks/useShapes';
 
 interface IProps {
   className?: string;
 }
 export const PropertyEditor: React.FC<IProps> = props => {
   const { className } = props;
-
+  const { shapes, updateShapeById } = useShapes();
   const presets = useMemo(() => {
     return [
       { label: '红色', colors: red },
@@ -29,15 +31,25 @@ export const PropertyEditor: React.FC<IProps> = props => {
   return useMemo(() => {
     return (
       <div className={`comp-property-editor ${className || ''}`}>
-        <ColorPicker
-          presets={presets}
-          defaultValue="#1677ff"
-          onOpenChange={open => {
-            // TODO: 修改按钮类actived
-          }}
-        >
-          <div className="edit-icon-btn storke-color"></div>
-        </ColorPicker>
+        <Space>
+          {colorBtns.map(item => {
+            return (
+              <ColorPicker
+                key={item.changeKey}
+                presets={presets}
+                defaultValue="#1677ff"
+                onOpenChange={open => {
+                  // TODO: 修改按钮类actived
+                }}
+                onChange={value => {
+                  console.log(value.toHexString());
+                }}
+              >
+                <div className={`edit-icon-btn ${item.iconClass}`}></div>
+              </ColorPicker>
+            );
+          })}
+        </Space>
       </div>
     );
   }, [className, presets]);

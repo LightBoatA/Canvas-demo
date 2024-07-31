@@ -292,10 +292,10 @@ export const drawShape = (
     if (ctx) {
         // 绘制形状及形状附属图形
         shapes.forEach(shape => {
-            ctx.fillStyle = COLOR_SHAPE;
-            ctx.strokeStyle = COLOR_BORDER;
-            ctx.lineWidth = STROKE_WIDTH;
-            const { x, y, text, width, height, data } = shape;
+            const { x, y, text, width, height, data, fillColor, strokeColor, lineWidth, fontColor, fontSize } = shape;
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = lineWidth;
             // 绘制形状
             if (shape.type === EShape.RECT) {
                 ctx.fillRect(x - width / 2, y - height / 2, width, height);
@@ -353,11 +353,12 @@ export const drawShape = (
 
             // 绘制文字
             if (text) {
-                ctx.fillStyle = FONT_COLOR;
+                ctx.fillStyle = fontColor;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 // ctx.font = "bold 14px sans-serif"
-                ctx.font = "14px sans-serif"
+                // ctx.font = "14px sans-serif"
+                ctx.font = `${fontSize}px sans-serif`
                 ctx.fillText(text, x, y);
             }
             // 绘制辅助线

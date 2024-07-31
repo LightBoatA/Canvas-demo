@@ -42,6 +42,7 @@ import { EShape } from '../Toolbar/common';
 import { getCryptoUuid } from '../../utils/util';
 import { Typography } from 'antd';
 import ContextMenuModal from '../../components/ContextMenuModal';
+import { useShapes } from '../../hooks/useShapes';
 
 interface IProps {
   className?: string;
@@ -54,7 +55,7 @@ export const Canvas: React.FC<IProps> = props => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const [shapes, setShapes] = useState<IShape[]>([]);
+  // const [shapes, setShapes] = useState<IShape[]>([]);
   // 选中的元素
   const [selectedMap, setSelectedMap] = useState<Map<string, EElement>>(new Map());
   // 移动开始信息
@@ -81,6 +82,7 @@ export const Canvas: React.FC<IProps> = props => {
   const [startPosition, setStartPosition] = useState<IPoint>(DEFAULT_POINT); // 框选起始点
   const [curPosition, setCurPosition] = useState<IPoint>(DEFAULT_POINT); // 框选当前点
 
+  const { shapes, setShapes, updateShapeById } = useShapes();
   // const selectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (canvasRef.current && !ctxRef.current) {
@@ -141,14 +143,14 @@ export const Canvas: React.FC<IProps> = props => {
     if (prevShapes) {
       setShapes(prevShapes);
     }
-  }, []);
+  }, [setShapes]);
 
   const handleRedo = useCallback(() => {
     const nextShapes = historyManager.redo();
     if (nextShapes) {
       setShapes(nextShapes);
     }
-  }, []);
+  }, [setShapes]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -168,25 +170,20 @@ export const Canvas: React.FC<IProps> = props => {
   const addShape = useCallback((name: EShape, offsetX: number, offsetY: number) => {
     const shape = getInitShapeData(name, offsetX, offsetY);
     setSelectedMap(new Map([[shape.id, EElement.SHAPE]]));
-    setShapes(prevShapes => {
-      const newShapes = [...prevShapes, shape];
-      historyManager.push(newShapes);
-      return newShapes;
-    });
-  }, []);
+
+    setShapes([
+      ...shapes,
+      shape
+    ])
+  }, [setShapes, shapes]);
 
   const updateShapeText = useCallback((id: string, newText: string) => {
-    setShapes(prevShapes => {
-      return prevShapes.map(shape => {
-        if (shape.id === id) {
-          return {
-            ...shape,
-            text: newText // 更新文字
-          };
-        } else return shape;
-      });
-    });
-  }, []);
+    updateShapeById({
+      id, 
+      key: 'text', 
+      data: newText
+    })
+  }, [updateShapeById]);
 
   const startEditing = useCallback(
     (x: number, y: number) => {
@@ -242,11 +239,11 @@ export const Canvas: React.FC<IProps> = props => {
 
   const handleDelete = useCallback(() => {
     if (selectedMap.size > 0) {
-      setShapes(oldShape => oldShape.filter(shape => !selectedMap.has(shape.id)));
+      setShapes(shapes.filter(shape => !selectedMap.has(shape.id)))
       setConnections(oldConnection => oldConnection.filter(shape => !selectedMap.has(shape.id)));
       setSelectedMap(new Map());
     }
-  }, [selectedMap]);
+  }, [selectedMap, setShapes, shapes]);
 
   const moveShapes = useCallback(
     (newX: number, newY: number) => {
@@ -277,19 +274,18 @@ export const Canvas: React.FC<IProps> = props => {
         setShapes(newShapes);
       }
     },
-    [moveStartInfo, multipleSelectRect, selectedMap, selectedShapes, shapes]
+    [moveStartInfo, multipleSelectRect, selectedMap, selectedShapes, setShapes, shapes]
   );
 
   const resizeShapes = useCallback(
     (cursorX: number, cursorY: number) => {
       if (resizeStartInfo) {
         const map = calcResizedShape(cursorX, cursorY, resizeStartInfo);
-        setShapes(oldShapes => {
-          return oldShapes.map(shape => (map.has(shape.id) ? map.get(shape.id)! : shape));
-        });
+        const newShapes = shapes.map(shape => (map.has(shape.id) ? map.get(shape.id)! : shape));
+        setShapes(newShapes)
       }
     },
-    [resizeStartInfo]
+    [resizeStartInfo, setShapes, shapes]
   );
 
   const handleDragover = (e: DragEvent) => {
@@ -499,11 +495,12 @@ export const Canvas: React.FC<IProps> = props => {
       position: 'absolute'
     };
     if (editingShape) {
+      const { x, y, width } = editingShape;
       style = {
         ...style,
         // left: editingShape.x - INPUT_OFFSET.x,
-        left: '50%',
-        top: editingShape.y - INPUT_OFFSET.y,
+        left:  x - width / 2 - 2,
+        top: y - INPUT_OFFSET.y,
         width: `${editingShape.width}px`
       };
     }

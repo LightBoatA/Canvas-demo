@@ -51,11 +51,11 @@ export interface IShape {
     height: number;
     text: string;
     connectionPoints: IConnectionPoint[];
-    // storkeColor: string;
-    // fillColor: string;
-    // fontColor: string;
-    // fontSize: number;
-    // lineWidth: number;
+    strokeColor: string;
+    fillColor: string;
+    fontColor: string;
+    fontSize: number;
+    lineWidth: number;
 }
 
 export interface IRect {

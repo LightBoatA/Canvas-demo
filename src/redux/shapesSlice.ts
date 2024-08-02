@@ -28,11 +28,13 @@ export const shapesSlice = createSlice({
       action: PayloadAction<{ ids: string[]; key: keyof IShape; data: any }>
     ) {
       const { ids, key, data } = action.payload;
-      const shapes = state.value.filter(item => ids.includes(item.id));
-      if (shapes) {
-        shapes.forEach(shape => {
-          (shape as any)[key] = data; 
-        });
+      if (ids.length) {
+        const shapes = state.value.filter(item => ids.includes(item.id));
+        if (shapes) {
+          shapes.forEach(shape => {
+            (shape as any)[key] = data;
+          });
+        }
       }
     }
   }

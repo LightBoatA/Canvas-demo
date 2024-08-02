@@ -210,7 +210,7 @@ const drawConnections = (
     // 清除缓存
     connectionRouteCache = {};
     connections.forEach(connection => {
-        const { fromShape, fromPoint, toShape, toPoint, id } = connection;
+        const { fromShape, fromPoint, toShape, toPoint, id, strokeColor } = connection;
         // 根据ID获取最新的xy,否则移动形状时不更新
         const latestFromShape = shapes.find(shape => shape.id === fromShape.id);
         const latestFromPoint = latestFromShape?.connectionPoints.find(point => point.direction === fromPoint.direction);
@@ -229,7 +229,7 @@ const drawConnections = (
         if (hoveringConnectionId === id) {
             drawPolyLine(ctx, routes, [], COLOR_CTRL_POINT); // 悬停状态
         } else {
-            drawPolyLine(ctx, routes);
+            drawPolyLine(ctx, routes, [], strokeColor);
         }
     })
 }

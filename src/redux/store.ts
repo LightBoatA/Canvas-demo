@@ -4,6 +4,7 @@ import shapesReducer, { IShapes } from './shapesSlice';
 import { IShape } from '../pages/Canvas/common';
 import commonReducer from './commonSlices';
 import { ICommon } from './commonSlices';
+import connectionsReducer, { IConnections } from './connectionsSlice';
 
 
 // 当前Redux应用的state存在于此store对象中
@@ -11,6 +12,7 @@ export type StoreState = {
     common: ICommon;
     number: INumber;
     shapes: IShapes;
+    connections: IConnections
 }
 
 // store是通过传入一个reducer来创建的
@@ -19,6 +21,7 @@ export default configureStore({
         common: commonReducer,
         number: numberReducer,
         shapes: shapesReducer,
+        connections: connectionsReducer,
     },
 })
 

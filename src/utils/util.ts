@@ -82,3 +82,20 @@ export const mapToObject = <K extends string | number, V>(map: MapFromObject<K, 
   return obj;
 };
 
+/**
+ * 数组对象查找某个值
+ */
+export const findValueObj = (arr: Array<any>, key: string, value: any, isEqual = true) => {
+  if (!(arr && Array.isArray(arr))) {
+    return -1;
+  }
+  const obj = arr.find(item => {
+    if (item[key]) {
+      return isEqual ? item[key] === value : item[key].indexOf(value) > -1;
+    } else {
+      return false;
+    }
+  });
+  // console.log("???",obj)
+  return obj;
+};

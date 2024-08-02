@@ -82,6 +82,7 @@ export interface IConnection {
     fromPoint: IConnectionPoint;
     toPoint: IConnectionPoint;
     id: string;
+    strokeColor: string;
 }
 
 export type IShapeData = IRectData | ICircleData | IParallelogramData;

@@ -35,7 +35,8 @@ import {
   IBounds,
   findElementsInBox,
   EDirection,
-  IResizeStartInfo
+  IResizeStartInfo,
+  COLOR_BORDER
 } from './common/index';
 import { HistoryManager } from './common/HistoryManager';
 import { EShape } from '../Toolbar/common';
@@ -44,6 +45,7 @@ import { Typography } from 'antd';
 import ContextMenuModal from '../../components/ContextMenuModal';
 import { useShapes } from '../../hooks/useShapes';
 import { useCommon } from '../../hooks/useCommon';
+import { useConnections } from '../../hooks/useConnections';
 
 interface IProps {
   className?: string;
@@ -73,7 +75,7 @@ export const Canvas: React.FC<IProps> = props => {
   // const [fromConnectionPointInfo, setfromConnectionPointInfo] = useState<string>(""); // shapeId-connectionPointDirection
   const [startConnectionPoint, setStartConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
   const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
-  const [connections, setConnections] = useState<IConnection[]>([]);
+  // const [connections, setConnections] = useState<IConnection[]>([]);
   const [hoveringConnectionPoint, setHoveringConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
   const [hoveringConnectionId, setHoveringConnectionId] = useState<string>('');
   const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
@@ -84,6 +86,7 @@ export const Canvas: React.FC<IProps> = props => {
   const [curPosition, setCurPosition] = useState<IPoint>(DEFAULT_POINT); // 框选当前点
 
   const { shapes, setShapes, updateShapeByIds } = useShapes();
+  const { connections, setConnections } = useConnections();
   const { selectedMap, setSelectedMap } = useCommon();
   // const selectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -243,10 +246,10 @@ export const Canvas: React.FC<IProps> = props => {
   const handleDelete = useCallback(() => {
     if (Object.keys(selectedMap).length > 0) {
       setShapes(shapes.filter(shape => !selectedMap[shape.id]))
-      setConnections(oldConnection => oldConnection.filter(shape => !selectedMap[shape.id]));
+      setConnections(connections.filter(shape => !selectedMap[shape.id]))
       setSelectedMap({});
     }
-  }, [selectedMap, setSelectedMap, setShapes, shapes]);
+  }, [connections, selectedMap, setConnections, setSelectedMap, setShapes, shapes]);
 
   const moveShapes = useCallback(
     (newX: number, newY: number) => {
@@ -335,7 +338,8 @@ export const Canvas: React.FC<IProps> = props => {
           fromShape: shape,
           fromPoint: point,
           toPoint,
-          toShape
+          toShape,
+          strokeColor: COLOR_BORDER,
         });
       }
     },
@@ -461,18 +465,17 @@ export const Canvas: React.FC<IProps> = props => {
       const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
       if (connectionPoint && startConnectionPoint) {
         const { shape, point } = startConnectionPoint;
-        setConnections(prevConnections => {
-          return [
-            ...prevConnections,
-            {
-              id: getCryptoUuid(),
-              fromShape: shape,
-              fromPoint: point,
-              toShape: connectionPoint.shape,
-              toPoint: connectionPoint.point
-            }
-          ];
-        });
+        setConnections( [
+          ...connections,
+          {
+            id: getCryptoUuid(),
+            fromShape: shape,
+            fromPoint: point,
+            toShape: connectionPoint.shape,
+            toPoint: connectionPoint.point,
+            strokeColor: COLOR_BORDER,
+          }
+        ])
       }
       setStartConnectionPoint(null);
       setPreparedConnection(null);
@@ -480,7 +483,7 @@ export const Canvas: React.FC<IProps> = props => {
       setMode(EMouseMoveMode.DEFAULT);
       historyManager.push(shapes);
     },
-    [handleBoxSelection, mode, shapes, startConnectionPoint]
+    [connections, handleBoxSelection, mode, setConnections, shapes, startConnectionPoint]
   );
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

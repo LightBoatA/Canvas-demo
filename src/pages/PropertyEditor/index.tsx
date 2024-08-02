@@ -1,18 +1,13 @@
 import React, { useMemo } from 'react';
-import {
-  generate,
-  green,
-  presetPalettes,
-  red,
-  blue,
-  grey
-} from '@ant-design/colors';
-import { ColorPicker, Select, Space, theme } from 'antd';
-import type { ColorPickerProps } from 'antd';
+import { green, red, blue, grey } from '@ant-design/colors';
+import { ColorPicker, Select, Space } from 'antd';
 import './index.less';
-import { colorBtns } from './common';
+import { FONT_SIZE_OPTIONS, colorBtns } from './common';
 import { useShapes } from '../../hooks/useShapes';
 import { useCommon } from '../../hooks/useCommon';
+import { EElement, IConnection, IShape } from '../Canvas/common';
+import { findValueObj } from '../../utils/util';
+import { useConnections } from '../../hooks/useConnections';
 
 interface IProps {
   className?: string;
@@ -20,6 +15,7 @@ interface IProps {
 export const PropertyEditor: React.FC<IProps> = props => {
   const { className } = props;
   const { shapes, updateShapeByIds } = useShapes();
+  const { updateConnectionByIds } = useConnections();
   const { selectedMap } = useCommon();
   const presets = useMemo(() => {
     return [
@@ -31,9 +27,17 @@ export const PropertyEditor: React.FC<IProps> = props => {
   }, []);
 
   const firstShape = useMemo(() => {
-    if (Object.keys(selectedMap).length <= 0) return null;
-    const firstId = Object.keys(selectedMap)[0]
-  }, [selectedMap])
+    const keys = Object.keys(selectedMap);
+    if (keys.length <= 0) return null;
+    for (let i = 0; i < keys.length; i++) {
+      if (selectedMap[keys[i]] === EElement.SHAPE) {
+        const shape = findValueObj(shapes, 'id', keys[i]);
+        return shape;
+      }
+    }
+    return null;
+  }, [selectedMap, shapes]);
+
   return useMemo(() => {
     return (
       <div className={`comp-property-editor ${className || ''}`}>
@@ -42,17 +46,15 @@ export const PropertyEditor: React.FC<IProps> = props => {
         )}
         <Space>
           <Select
-            value={ 14 }
+            value={firstShape?.fontSize || 14}
             onChange={value => {
-
+              updateShapeByIds({
+                ids: Object.keys(selectedMap),
+                key: 'fontSize',
+                data: value
+              });
             }}
-            options={[
-              { value: 12, label: '12px' },
-              { value: 14, label: '14px' },
-              { value: 16, label: '16px' },
-              { value: 18, label: '18px' },
-              { value: 20, label: '20px' },
-            ]}
+            options={FONT_SIZE_OPTIONS}
           />
           {colorBtns.map(item => {
             return (
@@ -66,7 +68,12 @@ export const PropertyEditor: React.FC<IProps> = props => {
                 onChange={value => {
                   updateShapeByIds({
                     ids: Object.keys(selectedMap),
-                    key: item.changeKey,
+                    key: item.changeKey as keyof IShape,
+                    data: value.toHexString()
+                  });
+                  updateConnectionByIds({
+                    ids: Object.keys(selectedMap),
+                    key: item.changeKey as keyof IConnection,
                     data: value.toHexString()
                   });
                 }}
@@ -78,7 +85,7 @@ export const PropertyEditor: React.FC<IProps> = props => {
         </Space>
       </div>
     );
-  }, [className, presets, selectedMap, updateShapeByIds]);
+  }, [className, firstShape?.fontSize, presets, selectedMap, updateConnectionByIds, updateShapeByIds]);
 };
 
 export default PropertyEditor;

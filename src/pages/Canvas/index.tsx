@@ -1,4 +1,12 @@
-import React, { CSSProperties, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  CSSProperties,
+  DragEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import './index.less';
 import {
   CANVAS_HEITHT,
@@ -62,32 +70,44 @@ export const Canvas: React.FC<IProps> = props => {
   // 选中的元素
   // const [selectedMap, setSelectedMap] = useState<Map<string, EElement>>(new Map());
   // 移动开始信息
-  const [moveStartInfo, setMoveStartInfo] = useState<IMoveStartInfo>(DEFAULT_MOUSE_INFO);
+  const [moveStartInfo, setMoveStartInfo] =
+    useState<IMoveStartInfo>(DEFAULT_MOUSE_INFO);
   // 缩放开始信息
-  const [resizeStartInfo, setResizeStartInfo] = useState<IResizeStartInfo | null>(null);
+  const [resizeStartInfo, setResizeStartInfo] =
+    useState<IResizeStartInfo | null>(null);
 
   const [editingText, setEditingText] = useState<string>('');
   const [editingId, setEditingId] = useState<string>('');
   // 鼠标悬停在缩放控制点上
-  const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(null);
+  const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(
+    null
+  );
   // 鼠标悬停在形状上
   const [hoveringId, setHoveringId] = useState<string>('');
   // const [fromConnectionPointInfo, setfromConnectionPointInfo] = useState<string>(""); // shapeId-connectionPointDirection
-  const [startConnectionPoint, setStartConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
-  const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
+  const [startConnectionPoint, setStartConnectionPoint] =
+    useState<IShapeConnectionPoint | null>(null);
+  const [preparedConnection, setPreparedConnection] =
+    useState<IConnection | null>(null);
   // const [connections, setConnections] = useState<IConnection[]>([]);
-  const [hoveringConnectionPoint, setHoveringConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
+  const [hoveringConnectionPoint, setHoveringConnectionPoint] =
+    useState<IShapeConnectionPoint | null>(null);
   const [hoveringConnectionId, setHoveringConnectionId] = useState<string>('');
-  const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
+  const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(
+    DEFAULT_HELP_LINE_VAL
+  );
   const [isShowContextMenu, setIsShowContextMenu] = useState<boolean>(false);
-  const [contextMenuModalStyle, setContextMenuModalStyle] = useState<CSSProperties>({ top: 0, left: 0, margin: 0 });
+  const [contextMenuModalStyle, setContextMenuModalStyle] =
+    useState<CSSProperties>({ top: 0, left: 0, margin: 0 });
   const [mode, setMode] = useState<EMouseMoveMode>(EMouseMoveMode.DEFAULT);
   const [startPosition, setStartPosition] = useState<IPoint>(DEFAULT_POINT); // 框选起始点
   const [curPosition, setCurPosition] = useState<IPoint>(DEFAULT_POINT); // 框选当前点
-
+  const [canvasStartOffset, setCanvasStartOffset] =
+    useState<IPoint>(DEFAULT_POINT); // 移动画布起始点
   const { shapes, setShapes, updateShapeByIds } = useShapes();
   const { connections, setConnections } = useConnections();
-  const { selectedMap, setSelectedMap } = useCommon();
+  const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition } =
+    useCommon();
   // const selectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (canvasRef.current && !ctxRef.current) {
@@ -98,9 +118,17 @@ export const Canvas: React.FC<IProps> = props => {
   // 鼠标移动到缩放点时，光标样式修改
   useEffect(() => {
     if (canvasRef.current) {
-      canvasRef.current.style.cursor = hoveringCtrlPoint ? `${cursorDirectionMap[hoveringCtrlPoint.direction]}` : `default`;
+      let cursor = 'default';
+      if (mode === EMouseMoveMode.MOVE_CANVAS) {
+        cursor = 'grabbing';
+      }
+      if (hoveringCtrlPoint) {
+        cursor = `${cursorDirectionMap[hoveringCtrlPoint.direction]}`;
+      }
+
+      canvasRef.current.style.cursor = cursor;
     }
-  }, [hoveringCtrlPoint]);
+  }, [hoveringConnectionPoint, hoveringCtrlPoint, mode]);
 
   const clearCanvas = useCallback(() => {
     if (ctxRef.current) {
@@ -121,9 +149,30 @@ export const Canvas: React.FC<IProps> = props => {
   useEffect(() => {
     if (ctxRef.current) {
       clearCanvas();
-      drawShape(ctxRef.current, shapes, hoveringId, hoveringConnectionId, preparedConnection, connections, hoveringConnectionPoint, helpLineVals, multipleSelectRect);
+      drawShape(
+        ctxRef.current,
+        shapes,
+        hoveringId,
+        hoveringConnectionId,
+        preparedConnection,
+        connections,
+        hoveringConnectionPoint,
+        helpLineVals,
+        multipleSelectRect
+      );
     }
-  }, [clearCanvas, connections, helpLineVals, hoveringConnectionId, hoveringConnectionPoint, hoveringId, multipleSelectRect, preparedConnection, selectedMap, shapes]);
+  }, [
+    clearCanvas,
+    connections,
+    helpLineVals,
+    hoveringConnectionId,
+    hoveringConnectionPoint,
+    hoveringId,
+    multipleSelectRect,
+    preparedConnection,
+    selectedMap,
+    shapes
+  ]);
 
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
@@ -173,23 +222,26 @@ export const Canvas: React.FC<IProps> = props => {
     };
   });
 
-  const addShape = useCallback((name: EShape, offsetX: number, offsetY: number) => {
-    const shape = getInitShapeData(name, offsetX, offsetY);
-    setSelectedMap({ [shape.id]: EElement.SHAPE });
+  const addShape = useCallback(
+    (name: EShape, offsetX: number, offsetY: number) => {
+      const shape = getInitShapeData(name, offsetX, offsetY);
+      setSelectedMap({ [shape.id]: EElement.SHAPE });
 
-    setShapes([
-      ...shapes,
-      shape
-    ])
-  }, [setSelectedMap, setShapes, shapes]);
+      setShapes([...shapes, shape]);
+    },
+    [setSelectedMap, setShapes, shapes]
+  );
 
-  const updateShapeText = useCallback((id: string, newText: string) => {
-    updateShapeByIds({
-      ids: [id], 
-      key: 'text', 
-      data: newText
-    })
-  }, [updateShapeByIds]);
+  const updateShapeText = useCallback(
+    (id: string, newText: string) => {
+      updateShapeByIds({
+        ids: [id],
+        key: 'text',
+        data: newText
+      });
+    },
+    [updateShapeByIds]
+  );
 
   const startEditing = useCallback(
     (x: number, y: number) => {
@@ -218,26 +270,32 @@ export const Canvas: React.FC<IProps> = props => {
     const width = Math.abs(curPosition.x - startPosition.x);
     const height = Math.abs(curPosition.y - startPosition.y);
     return {
-      top: minY,
-      left: minX,
+      top: minY + canvasPosition[1],
+      left: minX + canvasPosition[0],
       width,
       height,
       backgroundColor: 'rgba(0, 0, 255, 0.3)',
       border: '1px solid blue'
     };
-  }, [curPosition.x, curPosition.y, startPosition.x, startPosition.y]);
+  }, [
+    canvasPosition,
+    curPosition.x,
+    curPosition.y,
+    startPosition.x,
+    startPosition.y
+  ]);
 
   const handleBoxSelection = useCallback(() => {
     const { top, left, width, height } = boxStyles;
     const bounds: IBounds = {
-      top,
-      left,
+      top: top - canvasPosition[1],
+      left: left - canvasPosition[0],
       right: left + width,
       bottom: top + height
     };
     const eleMap = findElementsInBox(bounds, shapes, connections);
     setSelectedMap(mapToObject<string, EElement>(eleMap));
-  }, [boxStyles, connections, setSelectedMap, shapes]);
+  }, [boxStyles, canvasPosition, connections, setSelectedMap, shapes]);
 
   const updateSelectionBox = useCallback((offsetX: number, offsetY: number) => {
     setCurPosition({ x: offsetX, y: offsetY });
@@ -245,11 +303,18 @@ export const Canvas: React.FC<IProps> = props => {
 
   const handleDelete = useCallback(() => {
     if (Object.keys(selectedMap).length > 0) {
-      setShapes(shapes.filter(shape => !selectedMap[shape.id]))
-      setConnections(connections.filter(shape => !selectedMap[shape.id]))
+      setShapes(shapes.filter(shape => !selectedMap[shape.id]));
+      setConnections(connections.filter(shape => !selectedMap[shape.id]));
       setSelectedMap({});
     }
-  }, [connections, selectedMap, setConnections, setSelectedMap, setShapes, shapes]);
+  }, [
+    connections,
+    selectedMap,
+    setConnections,
+    setSelectedMap,
+    setShapes,
+    shapes
+  ]);
 
   const moveShapes = useCallback(
     (newX: number, newY: number) => {
@@ -259,7 +324,18 @@ export const Canvas: React.FC<IProps> = props => {
         const newRectX = newX - rectOffset.distanceX,
           newRectY = newY - rectOffset.distanceY;
         const selectedShapeIds = selectedShapes.map(shape => shape.id);
-        const { snapX: rectSnapX, snapY: rectSnapY, helpLine } = getSnapData(newRectX, newRectY, rectWidth, rectHeight, selectedShapeIds, shapes);
+        const {
+          snapX: rectSnapX,
+          snapY: rectSnapY,
+          helpLine
+        } = getSnapData(
+          newRectX,
+          newRectY,
+          rectWidth,
+          rectHeight,
+          selectedShapeIds,
+          shapes
+        );
         setHelpLineVals(helpLine);
         const newShapes = shapes.map(shape => {
           if (selectedMap[shape.id]) {
@@ -273,22 +349,39 @@ export const Canvas: React.FC<IProps> = props => {
               ...shape,
               x: shapeX,
               y: shapeY,
-              connectionPoints: shape.connectionPoints.map(point => getConnectionPointVal(shapeX, shapeY, width, height, point.direction))
+              connectionPoints: shape.connectionPoints.map(point =>
+                getConnectionPointVal(
+                  shapeX,
+                  shapeY,
+                  width,
+                  height,
+                  point.direction
+                )
+              )
             };
           } else return shape;
         });
         setShapes(newShapes);
       }
     },
-    [moveStartInfo, multipleSelectRect, selectedMap, selectedShapes, setShapes, shapes]
+    [
+      moveStartInfo,
+      multipleSelectRect,
+      selectedMap,
+      selectedShapes,
+      setShapes,
+      shapes
+    ]
   );
 
   const resizeShapes = useCallback(
     (cursorX: number, cursorY: number) => {
       if (resizeStartInfo) {
         const map = calcResizedShape(cursorX, cursorY, resizeStartInfo);
-        const newShapes = shapes.map(shape => (map.has(shape.id) ? map.get(shape.id)! : shape));
-        setShapes(newShapes)
+        const newShapes = shapes.map(shape =>
+          map.has(shape.id) ? map.get(shape.id)! : shape
+        );
+        setShapes(newShapes);
       }
     },
     [resizeStartInfo, setShapes, shapes]
@@ -339,7 +432,7 @@ export const Canvas: React.FC<IProps> = props => {
           fromPoint: point,
           toPoint,
           toShape,
-          strokeColor: COLOR_BORDER,
+          strokeColor: COLOR_BORDER
         });
       }
     },
@@ -350,18 +443,49 @@ export const Canvas: React.FC<IProps> = props => {
 
   // }, [])
 
+  const updateStagePosition = useCallback(
+    (offsetX: number, offsetY: number) => {
+      const { x, y } = canvasStartOffset;
+      const DValueX = offsetX - x;
+      const DValueY = offsetY - y;
+      updateCanvasPosition([
+        canvasPosition[0] + DValueX,
+        canvasPosition[1] + DValueY
+      ]);
+    },
+    [canvasPosition, canvasStartOffset, updateCanvasPosition]
+  );
+
   const handleMouseDown = useCallback(
     (e: MouseEvent) => {
       const { offsetX, offsetY, ctrlKey } = e;
+      
+      if (e.button === 1) {
+        setCanvasStartOffset({ x: offsetX, y: offsetY });
+        setMode(EMouseMoveMode.MOVE_CANVAS);
+        return;
+      }
       if (e.target === inputRef.current) return;
       // 与光标相交的连接点
-      const intersectedConnectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+      const intersectedConnectionPoint = getIntersectedConnectionPoint(
+        shapes,
+        offsetX,
+        offsetY
+      );
       // 与光标相交的形状
       const intersectedShape = getIntersectedShape(shapes, offsetX, offsetY); // TODO: 这里一定要先计算出来吗？
       // 与光标相交的连接线
-      const intersectConnectionId = getIntersectedConnectionId(offsetX, offsetY, connections);
+      const intersectConnectionId = getIntersectedConnectionId(
+        offsetX,
+        offsetY,
+        connections
+      );
       // 与光标相交的缩放控制点
-      const intersectedResizeCtrlPoint = getIntersectedControlPoint(offsetX, offsetY, multipleSelectRect);
+      const intersectedResizeCtrlPoint = getIntersectedControlPoint(
+        offsetX,
+        offsetY,
+        multipleSelectRect
+      );
       if (intersectedConnectionPoint) {
         // 与连接点相交：画线
         setMode(EMouseMoveMode.CONNECT);
@@ -384,13 +508,17 @@ export const Canvas: React.FC<IProps> = props => {
           if (selectedMap[id]) {
             newMap.delete(id);
           } else {
-            const type = intersectedShape?.id ? EElement.SHAPE : EElement.CONNECTION;
+            const type = intersectedShape?.id
+              ? EElement.SHAPE
+              : EElement.CONNECTION;
             newMap.set(id, type);
           }
         } else {
           if (intersectedShape) {
             // 单选形状
-            const isPointInSelectedShape = selectedShapes.find(shape => shape.id === intersectedShape?.id);
+            const isPointInSelectedShape = selectedShapes.find(
+              shape => shape.id === intersectedShape?.id
+            );
             let newSelectedShapes = selectedShapes;
 
             // 如果点击的是选框外的图形，重新设置选框内容
@@ -398,7 +526,13 @@ export const Canvas: React.FC<IProps> = props => {
               newSelectedShapes = [intersectedShape];
               newMap = new Map([[intersectedShape.id, EElement.SHAPE]]);
             }
-            const newMouseMoveInfo = getMouseMoveInfo(newMap, connections, newSelectedShapes, offsetX, offsetY);
+            const newMouseMoveInfo = getMouseMoveInfo(
+              newMap,
+              connections,
+              newSelectedShapes,
+              offsetX,
+              offsetY
+            );
             setMode(EMouseMoveMode.MOVE);
             setMoveStartInfo(newMouseMoveInfo);
           } else if (intersectConnectionId) {
@@ -415,26 +549,50 @@ export const Canvas: React.FC<IProps> = props => {
         setSelectedMap({});
       }
     },
-    [connections, hoveringCtrlPoint?.direction, multipleSelectRect, selectedMap, selectedShapes, setSelectedMap, shapes]
+    [
+      connections,
+      hoveringCtrlPoint?.direction,
+      multipleSelectRect,
+      selectedMap,
+      selectedShapes,
+      setSelectedMap,
+      shapes
+    ]
   );
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const { offsetX, offsetY } = e;
-      const [hoveringShape] = shapes.filter(shape => isPointInShape(offsetX, offsetY, shape));
-      const [hoveringConnection] = connections.filter(connection => isPointInLine(offsetX, offsetY, connection.id));
+      const [hoveringShape] = shapes.filter(shape =>
+        isPointInShape(offsetX, offsetY, shape)
+      );
+      const [hoveringConnection] = connections.filter(connection =>
+        isPointInLine(offsetX, offsetY, connection.id)
+      );
       // 设置悬停连接线
-      hoveringConnection ? setHoveringConnectionId(hoveringConnection.id) : setHoveringConnectionId('');
+      hoveringConnection
+        ? setHoveringConnectionId(hoveringConnection.id)
+        : setHoveringConnectionId('');
       // 设置悬停形状
       hoveringShape ? setHoveringId(hoveringShape.id) : setHoveringId('');
       // 设置悬停缩放控制点
       if (multipleSelectRect) {
-        const ctrlPoint = getIntersectedControlPoint(offsetX, offsetY, multipleSelectRect);
+        const ctrlPoint = getIntersectedControlPoint(
+          offsetX,
+          offsetY,
+          multipleSelectRect
+        );
         setHoveringCtrlPoint(ctrlPoint);
       }
       // 设置悬停连接点
-      const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
-      connectionPoint ? setHoveringConnectionPoint(connectionPoint) : setHoveringConnectionPoint(null);
+      const connectionPoint = getIntersectedConnectionPoint(
+        shapes,
+        offsetX,
+        offsetY
+      );
+      connectionPoint
+        ? setHoveringConnectionPoint(connectionPoint)
+        : setHoveringConnectionPoint(null);
 
       switch (mode) {
         case EMouseMoveMode.MOVE:
@@ -449,11 +607,24 @@ export const Canvas: React.FC<IProps> = props => {
         case EMouseMoveMode.BOX_SELECTION:
           updateSelectionBox(offsetX, offsetY);
           break;
+        case EMouseMoveMode.MOVE_CANVAS:
+          updateStagePosition(offsetX, offsetY);
+          break;
         default:
           break;
       }
     },
-    [connections, drawVirtualConnection, mode, multipleSelectRect, shapes, moveShapes, updateSelectionBox, resizeShapes]
+    [
+      shapes,
+      connections,
+      multipleSelectRect,
+      mode,
+      moveShapes,
+      resizeShapes,
+      drawVirtualConnection,
+      updateSelectionBox,
+      updateStagePosition
+    ]
   );
 
   const handleMouseUp = useCallback(
@@ -462,10 +633,14 @@ export const Canvas: React.FC<IProps> = props => {
       if (mode === EMouseMoveMode.BOX_SELECTION) {
         handleBoxSelection();
       }
-      const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+      const connectionPoint = getIntersectedConnectionPoint(
+        shapes,
+        offsetX,
+        offsetY
+      );
       if (connectionPoint && startConnectionPoint) {
         const { shape, point } = startConnectionPoint;
-        setConnections( [
+        setConnections([
           ...connections,
           {
             id: getCryptoUuid(),
@@ -473,9 +648,9 @@ export const Canvas: React.FC<IProps> = props => {
             fromPoint: point,
             toShape: connectionPoint.shape,
             toPoint: connectionPoint.point,
-            strokeColor: COLOR_BORDER,
+            strokeColor: COLOR_BORDER
           }
-        ])
+        ]);
       }
       setStartConnectionPoint(null);
       setPreparedConnection(null);
@@ -483,12 +658,22 @@ export const Canvas: React.FC<IProps> = props => {
       setMode(EMouseMoveMode.DEFAULT);
       historyManager.push(shapes);
     },
-    [connections, handleBoxSelection, mode, setConnections, shapes, startConnectionPoint]
+    [
+      connections,
+      handleBoxSelection,
+      mode,
+      setConnections,
+      shapes,
+      startConnectionPoint
+    ]
   );
 
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditingText(e.target.value);
-  }, []);
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEditingText(e.target.value);
+    },
+    []
+  );
 
   const handleTextSubmit = useCallback(() => {
     updateShapeText(editingId, editingText);
@@ -505,14 +690,13 @@ export const Canvas: React.FC<IProps> = props => {
       const { x, y, width } = editingShape;
       style = {
         ...style,
-        // left: editingShape.x - INPUT_OFFSET.x,
-        left:  x - width / 2 - 2,
-        top: y - INPUT_OFFSET.y,
+        left: x - width / 2 - 2 + canvasPosition[0],
+        top: y - INPUT_OFFSET.y + canvasPosition[1],
         width: `${editingShape.width}px`
       };
     }
     return style;
-  }, [editingId, shapes]);
+  }, [canvasPosition, editingId, shapes]);
 
   return useMemo(() => {
     return (
@@ -528,17 +712,41 @@ export const Canvas: React.FC<IProps> = props => {
           id="drawing"
           width={CANVAS_WIDTH}
           height={CANVAS_HEITHT}
-          ref={canvasRef}>
+          ref={canvasRef}
+          style={{
+            left: canvasPosition[0],
+            top: canvasPosition[1]
+          }}
+        >
           这是一个画布
         </canvas>
-        {mode === EMouseMoveMode.BOX_SELECTION && <div style={{ pointerEvents: 'none', position: 'absolute', ...boxStyles }}></div>}
-        {editingId && <input style={inputStyle} className="input-text" ref={inputRef} value={editingText} type="text" onChange={handleTextChange} onBlur={handleTextSubmit} />}
+        {mode === EMouseMoveMode.BOX_SELECTION && (
+          <div
+            style={{
+              pointerEvents: 'none',
+              position: 'absolute',
+              ...boxStyles
+            }}
+          ></div>
+        )}
+        {editingId && (
+          <input
+            style={inputStyle}
+            className="input-text"
+            ref={inputRef}
+            value={editingText}
+            type="text"
+            onChange={handleTextChange}
+            onBlur={handleTextSubmit}
+          />
+        )}
         <ContextMenuModal
           open={isShowContextMenu}
           style={contextMenuModalStyle}
           onCancel={() => {
             setIsShowContextMenu(false);
-          }}>
+          }}
+        >
           <div>
             <Typography.Link className="w100p" onClick={handleDelete}>
               <div className="context-menu-item">
@@ -550,7 +758,25 @@ export const Canvas: React.FC<IProps> = props => {
         </ContextMenuModal>
       </div>
     );
-  }, [boxStyles, className, contextMenuModalStyle, editingId, editingText, handleDelete, handleDoubleClick, handleDrop, handleMouseDown, handleMouseMove, handleMouseUp, handleTextChange, handleTextSubmit, inputStyle, isShowContextMenu, mode]);
+  }, [
+    boxStyles,
+    canvasPosition,
+    className,
+    contextMenuModalStyle,
+    editingId,
+    editingText,
+    handleDelete,
+    handleDoubleClick,
+    handleDrop,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleTextChange,
+    handleTextSubmit,
+    inputStyle,
+    isShowContextMenu,
+    mode
+  ]);
 };
 
 export default Canvas;

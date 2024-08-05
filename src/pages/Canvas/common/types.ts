@@ -18,7 +18,8 @@ export enum EMouseMoveMode {
     "RESIZE" = "RESIZE", // 缩放
     "ROTATE" = "ROTATE", // 旋转
     "CONNECT" = "CONNECT", // 画连接线
-    "BOX_SELECTION" = "BOX_SELECTION" // 框选
+    "BOX_SELECTION" = "BOX_SELECTION", // 框选
+    "MOVE_CANVAS" = "MOVE_CANVAS", // 移动画布
 }
 export interface IPoint {
     x: number;

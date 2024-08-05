@@ -39,9 +39,9 @@ export const Index: React.FC<IProps> = props => {
   return useMemo(() => {
     return (
       <div className="page">
-        <div className="header">
+        {/* <div className="header">
           顶部
-        </div>
+        </div> */}
         <div className="menu-wrap">
           <Menu className='menu' onClick={menuClickHandle} selectedKeys={[current]} mode="horizontal" items={items} />
 
@@ -49,9 +49,9 @@ export const Index: React.FC<IProps> = props => {
         <div className="content">
           {contentComp}
         </div>
-        <div className="footer">
+        {/* <div className="footer">
           底部
-        </div>
+        </div> */}
       </div>
     );
   }, [contentComp, current, menuClickHandle]);

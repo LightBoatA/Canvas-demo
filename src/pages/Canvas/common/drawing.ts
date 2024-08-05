@@ -1,20 +1,24 @@
 import { EShape } from "../../Toolbar/common";
 import { getConnectionRoutes } from "../routers/utils";
 import { getCtrlPoints } from "./calculator";
-import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, STROKE_WIDTH, COLOR_GRID, COLOR_BORDER, COLOR_SHAPE, FONT_COLOR, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER, COLOR_SELECTED_COLOR, COLOR_CTRL_POINT } from "./constant";
-import { IShape, IPoint, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, EElement, IRect } from "./types";
-import { getRectBounds } from "./utils";
+import { CANVAS_WIDTH, CANVAS_HEITHT, GRID_SIZE, CTRL_POINT_HALF_SIZE, COLOR_GRID, COLOR_BORDER, COLOR_SHAPE, CONNECT_POINT_RADIUS, COLOR_DASHLINE, COLOR_CONNECTION, COLOR_BORDER_HOVER, COLOR_SELECTED_COLOR, COLOR_CTRL_POINT, COLOR_GRID_DARK } from "./constant";
+import { IShape, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, IRect } from "./types";
 
 // 连线id与连线路由点对应关系
 export let connectionRouteCache: { [key: string]: number[][] } = {}
 
 export const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = COLOR_GRID; // 网格线的颜色
     ctx.lineWidth = 1;
     const width = CANVAS_WIDTH;
     const height = CANVAS_HEITHT;
     // 绘制竖线
     for (let x = 0; x <= width; x += GRID_SIZE) {
+        if (x % (GRID_SIZE * 4)) {
+            ctx.strokeStyle = COLOR_GRID;
+        } else {
+            // 每四格画一条深色
+            ctx.strokeStyle = COLOR_GRID_DARK
+        }
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
@@ -24,6 +28,12 @@ export const drawGrid = (ctx: CanvasRenderingContext2D) => {
 
     // 绘制横线
     for (let y = 0; y <= height; y += GRID_SIZE) {
+        if (y % (GRID_SIZE * 4)) {
+            ctx.strokeStyle = COLOR_GRID;
+        } else {
+            // 每四格画一条深色
+            ctx.strokeStyle = COLOR_GRID_DARK
+        }
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
@@ -290,6 +300,9 @@ export const drawShape = (
     multipleSelectRect: IRect | null, //选中的元素
 ) => {
     if (ctx) {
+        // ctx.resetTransform();
+        // ctx.scale(0.5, 0.5);
+        drawGrid(ctx);
         // 绘制形状及形状附属图形
         shapes.forEach(shape => {
             const { x, y, text, width, height, data, fillColor, strokeColor, lineWidth, fontColor, fontSize } = shape;

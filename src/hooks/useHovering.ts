@@ -26,7 +26,6 @@ export const useHovering = () => {
       const ctrlPoint = getIntersectedControlPoint(offsetX, offsetY, multipleSelectRect);
       setHoveringCtrlPoint(ctrlPoint);
     }
-
     // 设置悬停连接点
     const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
     connectionPoint ? setHoveringConnectionPoint(connectionPoint) : setHoveringConnectionPoint(null);
@@ -38,6 +37,5 @@ export const useHovering = () => {
     hoveringId,
     hoveringConnectionId,
     hoveringConnectionPoint,
-    setHoveringConnectionPoint,
   }
 };

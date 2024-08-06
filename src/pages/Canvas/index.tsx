@@ -1,45 +1,20 @@
-import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
 import {
   CANVAS_HEITHT,
   CANVAS_WIDTH,
   DEFAULT_HELP_LINE_VAL,
-  DEFAULT_MOUSE_INFO,
   EElement,
   EMouseMoveMode,
-  IConnection,
-  IConnectionPoint,
-  ICtrlPoint,
   IHelpLineData,
-  IMoveStartInfo,
-  INPUT_OFFSET,
-  IShape,
-  IShapeConnectionPoint,
-  calcMultipleSelectRect,
-  calcResizedShape,
-  cursorDirectionMap,
   drawShape,
-  getConnectionPointVal,
-  getInitShapeData,
-  getIntersectedConnectionId,
-  getIntersectedConnectionPoint,
-  getIntersectedControlPoint,
-  getIntersectedShape,
-  getSnapData,
-  getVirtualEndPoint,
-  isPointInLine,
-  isPointInShape,
   getMouseMoveInfo,
   IPoint,
   DEFAULT_POINT,
   EDirection,
-  IResizeStartInfo,
-  COLOR_BORDER,
   getIntersectedInfo
 } from './common/index';
-import { getCryptoUuid, mapToObject, objectToMap } from '../../utils/util';
-import { Typography } from 'antd';
-import ContextMenuModal from '../../components/ContextMenuModal';
+import { mapToObject, objectToMap } from '../../utils/util';
 import { useShapes } from '../../hooks/useShapes';
 import { useCommon } from '../../hooks/useCommon';
 import { useConnections } from '../../hooks/useConnections';
@@ -54,6 +29,7 @@ import { useResizeShape } from '../../hooks/useResizeShape';
 import { useMoveShape } from '../../hooks/useMoveShape';
 import { useVirtualConnections } from '../../hooks/useVirtualConnection';
 import { useHovering } from '../../hooks/useHovering';
+import { useAddConnection } from '../../hooks/useAddConnection';
 
 interface IProps {
   className?: string;
@@ -63,22 +39,37 @@ export const Canvas: React.FC<IProps> = props => {
   const { className } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  // 辅助线
   const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
+  // 鼠标操作模式
   const [mode, setMode] = useState<EMouseMoveMode>(EMouseMoveMode.DEFAULT);
-  const [canvasStartOffset, setCanvasStartOffset] = useState<IPoint>(DEFAULT_POINT); // 移动画布起始点
+  // 画布起始位置
+  const [canvasStartOffset, setCanvasStartOffset] = useState<IPoint>(DEFAULT_POINT);
+  // 形状
   const { shapes, setShapes } = useShapes();
+  // 连线
   const { connections, setConnections } = useConnections();
+  // 常用参数
   const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition, canvasScale } = useCommon();
+  // 框选相关
   const { setStartPosition, setCurPosition, updateSelectionBox, handleBoxSelection, boxStyles, selectedShapes, multipleSelectRect } =
     useBoxSelection();
+  // 缩放相关
   const { setResizeStartInfo, resizeShapes } = useResizeShape();
+  // 鼠标悬停相关
+  const { setHoveringElement, hoveringCtrlPoint, hoveringId, hoveringConnectionId, hoveringConnectionPoint } = useHovering();
+  // 添加连线
+  const { handleAddConnection } = useAddConnection();
+  // 舞台缩放
+  useScale();
+  // 形状拖放
+  useDrop();
+  // 移动相关
   const { setMoveStartInfo, moveShapes } = useMoveShape(multipleSelectRect, setHelpLineVals);
-  const { setHoveringElement, setHoveringConnectionPoint, hoveringCtrlPoint, hoveringId, hoveringConnectionId, hoveringConnectionPoint } =
-    useHovering();
+  // 连线虚线相关
   const { setStartConnectionPoint, preparedConnection, setPreparedConnection, startConnectionPoint, drawVirtualConnection } =
     useVirtualConnections(hoveringConnectionPoint);
-  useScale();
-  useDrop();
+  // 鼠标样式
   useCursorStyle(mode, hoveringCtrlPoint);
 
   useEffect(() => {
@@ -143,16 +134,17 @@ export const Canvas: React.FC<IProps> = props => {
 
   const handleMouseDown = useCallback(
     (e: MouseEvent) => {
-      const { ctrlKey } = e;
-      const offsetX = e.offsetX / canvasScale,
-        offsetY = e.offsetY / canvasScale;
+      const offsetX = e.offsetX / canvasScale;
+      const offsetY = e.offsetY / canvasScale;
+      // 编辑框
+      if (e.target === document.getElementById('editing-input-box')) return;
+      // 中键：拖动画布
       if (e.button === 1) {
         setCanvasStartOffset({ x: offsetX, y: offsetY });
         setMode(EMouseMoveMode.MOVE_CANVAS);
         return;
       }
-      const editInputElement = document.getElementById('editing-input-box');
-      if (e.target === editInputElement) return;
+
       const { intersectedConnectionPoint, intersectedShape, intersectConnectionId, intersectedResizeCtrlPoint } = getIntersectedInfo(
         shapes,
         connections,
@@ -174,10 +166,9 @@ export const Canvas: React.FC<IProps> = props => {
         });
       } else if (intersectedShape || intersectConnectionId) {
         // 与图形、连线相交：选择或移动
-        // let newMap = new Map(selectedMap);
         let newMap = objectToMap<string, EElement>(selectedMap);
         const id = intersectedShape?.id || intersectConnectionId; // 同时只可能选中一种元素
-        if (ctrlKey) {
+        if (e.ctrlKey) {
           // 加选、减选
           if (selectedMap[id]) {
             newMap.delete(id);
@@ -238,8 +229,9 @@ export const Canvas: React.FC<IProps> = props => {
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      const offsetX = e.offsetX / canvasScale,
-        offsetY = e.offsetY / canvasScale;
+      const offsetX = e.offsetX / canvasScale;
+      const offsetY = e.offsetY / canvasScale;
+
       setHoveringElement(multipleSelectRect, offsetX, offsetY);
 
       switch (mode) {
@@ -284,29 +276,16 @@ export const Canvas: React.FC<IProps> = props => {
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      const offsetX = e.offsetX / canvasScale,
-        offsetY = e.offsetY / canvasScale;
+      const offsetX = e.offsetX / canvasScale;
+      const offsetY = e.offsetY / canvasScale;
       if (mode === EMouseMoveMode.BOX_SELECTION) {
         handleBoxSelection();
-      }
-      const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
-      if (connectionPoint && startConnectionPoint) {
-        const { shape, point } = startConnectionPoint;
-        setConnections([
-          ...connections,
-          {
-            id: getCryptoUuid(),
-            fromShape: shape,
-            fromPoint: point,
-            toShape: connectionPoint.shape,
-            toPoint: connectionPoint.point,
-            strokeColor: COLOR_BORDER
-          }
-        ]);
+      } else if (mode === EMouseMoveMode.CONNECT) {
+        handleAddConnection(startConnectionPoint, offsetX, offsetY);
       }
       resetStates();
     },
-    [canvasScale, connections, handleBoxSelection, mode, resetStates, setConnections, shapes, startConnectionPoint]
+    [canvasScale, handleAddConnection, handleBoxSelection, mode, resetStates, startConnectionPoint]
   );
 
   return useMemo(() => {

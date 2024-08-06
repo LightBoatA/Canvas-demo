@@ -7,7 +7,6 @@ import { IShape, IConnectionPoint, getVirtualEndPoint, COLOR_BORDER, IShapeConne
 export const useVirtualConnections = (hoveringConnectionPoint: IShapeConnectionPoint | null) => {
   const [startConnectionPoint, setStartConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
   const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
-  // const [hoveringConnectionPoint, setHoveringConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
   
   const drawVirtualConnection = useCallback(
     (offsetX: number, offsetY: number) => {

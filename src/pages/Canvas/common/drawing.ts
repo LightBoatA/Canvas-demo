@@ -298,10 +298,11 @@ export const drawShape = (
     hoveringConnectionPoint: IShapeConnectionPoint | null, // shapeId-connectionPointDirection
     helpLines: IHelpLineData, // 辅助对齐线
     multipleSelectRect: IRect | null, //选中的元素
+    scale: number,
 ) => {
     if (ctx) {
-        // ctx.resetTransform();
-        // ctx.scale(0.5, 0.5);
+        ctx.resetTransform();
+        ctx.scale(scale, scale);
         drawGrid(ctx);
         // 绘制形状及形状附属图形
         shapes.forEach(shape => {

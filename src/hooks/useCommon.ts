@@ -4,7 +4,7 @@ import { commonActions, commonSelector } from '../redux/commonSlices';
 
 export const useCommon = () => {
     const commonState = useSelector(commonSelector);
-    const { selectedMap, canvasPosition } = commonState;
+    const { selectedMap, canvasPosition, canvasScale } = commonState;
     const dispatch = useDispatch();
 
     const setSelectedMap = (data: { [key: string]: EElement }) => {
@@ -21,10 +21,19 @@ export const useCommon = () => {
         }))
     }
 
+    const updateCanvasScale = (data: number) => {
+        dispatch(commonActions.setKeyValue({
+            key: 'canvasScale',
+            value: data
+        }))
+    }
+    
     return { 
         canvasPosition,
         updateCanvasPosition,
         selectedMap,
         setSelectedMap,
+        canvasScale,
+        updateCanvasScale
     }
 }

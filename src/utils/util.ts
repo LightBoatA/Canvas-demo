@@ -99,3 +99,7 @@ export const findValueObj = (arr: Array<any>, key: string, value: any, isEqual =
   // console.log("???",obj)
   return obj;
 };
+
+export const getCanvasEle = () => {
+  return document.getElementById('drawing');
+}

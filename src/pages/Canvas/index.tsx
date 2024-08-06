@@ -1,12 +1,4 @@
-import React, {
-  CSSProperties,
-  DragEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
+import React, { DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.less';
 import {
   CANVAS_HEITHT,
@@ -40,111 +32,66 @@ import {
   getMouseMoveInfo,
   IPoint,
   DEFAULT_POINT,
-  IBounds,
-  findElementsInBox,
   EDirection,
   IResizeStartInfo,
-  COLOR_BORDER
+  COLOR_BORDER,
+  getIntersectedInfo
 } from './common/index';
-import { HistoryManager } from './common/HistoryManager';
-import { EShape } from '../Toolbar/common';
 import { getCryptoUuid, mapToObject, objectToMap } from '../../utils/util';
 import { Typography } from 'antd';
 import ContextMenuModal from '../../components/ContextMenuModal';
 import { useShapes } from '../../hooks/useShapes';
 import { useCommon } from '../../hooks/useCommon';
 import { useConnections } from '../../hooks/useConnections';
+import { useScale } from '../../hooks/useScale';
+import { useBoxSelection } from '../../hooks/useBoxSelection';
+import EditInput from '../../components/EditInput';
+import { useDrop } from '../../hooks/useDrop';
+import { useCursorStyle } from '../../hooks/useCursorStyle';
+import ContextMenu from '../../components/ContextMenu';
+import SelectionBox from '../../components/SelectionBox';
+import { useResizeShape } from '../../hooks/useResizeShape';
+import { useMoveShape } from '../../hooks/useMoveShape';
+import { useVirtualConnections } from '../../hooks/useVirtualConnection';
+import { useHovering } from '../../hooks/useHovering';
 
 interface IProps {
   className?: string;
 }
 
-const historyManager = new HistoryManager<IShape[]>();
-
 export const Canvas: React.FC<IProps> = props => {
   const { className } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  // const [shapes, setShapes] = useState<IShape[]>([]);
-  // 选中的元素
-  // const [selectedMap, setSelectedMap] = useState<Map<string, EElement>>(new Map());
-  // 移动开始信息
-  const [moveStartInfo, setMoveStartInfo] =
-    useState<IMoveStartInfo>(DEFAULT_MOUSE_INFO);
-  // 缩放开始信息
-  const [resizeStartInfo, setResizeStartInfo] =
-    useState<IResizeStartInfo | null>(null);
-
-  const [editingText, setEditingText] = useState<string>('');
-  const [editingId, setEditingId] = useState<string>('');
-  // 鼠标悬停在缩放控制点上
-  const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(
-    null
-  );
-  // 鼠标悬停在形状上
-  const [hoveringId, setHoveringId] = useState<string>('');
-  // const [fromConnectionPointInfo, setfromConnectionPointInfo] = useState<string>(""); // shapeId-connectionPointDirection
-  const [startConnectionPoint, setStartConnectionPoint] =
-    useState<IShapeConnectionPoint | null>(null);
-  const [preparedConnection, setPreparedConnection] =
-    useState<IConnection | null>(null);
-  // const [connections, setConnections] = useState<IConnection[]>([]);
-  const [hoveringConnectionPoint, setHoveringConnectionPoint] =
-    useState<IShapeConnectionPoint | null>(null);
-  const [hoveringConnectionId, setHoveringConnectionId] = useState<string>('');
-  const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(
-    DEFAULT_HELP_LINE_VAL
-  );
-  const [isShowContextMenu, setIsShowContextMenu] = useState<boolean>(false);
-  const [contextMenuModalStyle, setContextMenuModalStyle] =
-    useState<CSSProperties>({ top: 0, left: 0, margin: 0 });
+  const [helpLineVals, setHelpLineVals] = useState<IHelpLineData>(DEFAULT_HELP_LINE_VAL);
   const [mode, setMode] = useState<EMouseMoveMode>(EMouseMoveMode.DEFAULT);
-  const [startPosition, setStartPosition] = useState<IPoint>(DEFAULT_POINT); // 框选起始点
-  const [curPosition, setCurPosition] = useState<IPoint>(DEFAULT_POINT); // 框选当前点
-  const [canvasStartOffset, setCanvasStartOffset] =
-    useState<IPoint>(DEFAULT_POINT); // 移动画布起始点
-  const { shapes, setShapes, updateShapeByIds } = useShapes();
+  const [canvasStartOffset, setCanvasStartOffset] = useState<IPoint>(DEFAULT_POINT); // 移动画布起始点
+  const { shapes, setShapes } = useShapes();
   const { connections, setConnections } = useConnections();
-  const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition } =
-    useCommon();
-  // const selectionRef = useRef<HTMLDivElement>(null);
+  const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition, canvasScale } = useCommon();
+  const { setStartPosition, setCurPosition, updateSelectionBox, handleBoxSelection, boxStyles, selectedShapes, multipleSelectRect } =
+    useBoxSelection();
+  const { setResizeStartInfo, resizeShapes } = useResizeShape();
+  const { setMoveStartInfo, moveShapes } = useMoveShape(multipleSelectRect, setHelpLineVals);
+  const { setHoveringElement, setHoveringConnectionPoint, hoveringCtrlPoint, hoveringId, hoveringConnectionId, hoveringConnectionPoint } =
+    useHovering();
+  const { setStartConnectionPoint, preparedConnection, setPreparedConnection, startConnectionPoint, drawVirtualConnection } =
+    useVirtualConnections(hoveringConnectionPoint);
+  useScale();
+  useDrop();
+  useCursorStyle(mode, hoveringCtrlPoint);
+
   useEffect(() => {
     if (canvasRef.current && !ctxRef.current) {
       ctxRef.current = canvasRef.current.getContext('2d');
     }
   }, []);
 
-  // 鼠标移动到缩放点时，光标样式修改
-  useEffect(() => {
-    if (canvasRef.current) {
-      let cursor = 'default';
-      if (mode === EMouseMoveMode.MOVE_CANVAS) {
-        cursor = 'grabbing';
-      }
-      if (hoveringCtrlPoint) {
-        cursor = `${cursorDirectionMap[hoveringCtrlPoint.direction]}`;
-      }
-
-      canvasRef.current.style.cursor = cursor;
-    }
-  }, [hoveringConnectionPoint, hoveringCtrlPoint, mode]);
-
   const clearCanvas = useCallback(() => {
     if (ctxRef.current) {
       ctxRef.current.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEITHT);
     }
   }, []);
-
-  const selectedShapes = useMemo(() => {
-    if (Object.keys(selectedMap).length <= 0) return [];
-    return shapes.filter(shape => selectedMap[shape.id]);
-  }, [selectedMap, shapes]);
-
-  const multipleSelectRect = useMemo(() => {
-    const realMap = objectToMap<string, EElement>(selectedMap); // 锚点
-    return calcMultipleSelectRect(realMap, connections, selectedShapes) || null;
-  }, [connections, selectedMap, selectedShapes]);
 
   useEffect(() => {
     if (ctxRef.current) {
@@ -158,10 +105,12 @@ export const Canvas: React.FC<IProps> = props => {
         connections,
         hoveringConnectionPoint,
         helpLineVals,
-        multipleSelectRect
+        multipleSelectRect,
+        canvasScale
       );
     }
   }, [
+    canvasScale,
     clearCanvas,
     connections,
     helpLineVals,
@@ -174,317 +123,42 @@ export const Canvas: React.FC<IProps> = props => {
     shapes
   ]);
 
-  const handleContextMenu = useCallback((e: MouseEvent) => {
-    e.preventDefault();
-    const { clientX, clientY } = e;
-    setIsShowContextMenu(true);
-    setContextMenuModalStyle({
-      top: clientY,
-      left: clientX,
-      margin: 0
-    });
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener('contextmenu', handleContextMenu);
-
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-    };
-  }, [handleContextMenu]);
-
-  const handleUndo = useCallback(() => {
-    const prevShapes = historyManager.undo();
-    if (prevShapes) {
-      setShapes(prevShapes);
-    }
-  }, [setShapes]);
-
-  const handleRedo = useCallback(() => {
-    const nextShapes = historyManager.redo();
-    if (nextShapes) {
-      setShapes(nextShapes);
-    }
-  }, [setShapes]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'z') {
-        handleUndo();
-      } else if (e.ctrlKey && e.key === 'y') {
-        handleRedo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  });
-
-  const addShape = useCallback(
-    (name: EShape, offsetX: number, offsetY: number) => {
-      const shape = getInitShapeData(name, offsetX, offsetY);
-      setSelectedMap({ [shape.id]: EElement.SHAPE });
-
-      setShapes([...shapes, shape]);
-    },
-    [setSelectedMap, setShapes, shapes]
-  );
-
-  const updateShapeText = useCallback(
-    (id: string, newText: string) => {
-      updateShapeByIds({
-        ids: [id],
-        key: 'text',
-        data: newText
-      });
-    },
-    [updateShapeByIds]
-  );
-
-  const startEditing = useCallback(
-    (x: number, y: number) => {
-      const clickedShape = shapes.find(shape => isPointInShape(x, y, shape));
-      if (clickedShape) {
-        setSelectedMap({ [clickedShape.id]: EElement.SHAPE });
-        setEditingId(clickedShape.id);
-        setEditingText(clickedShape.text);
-        updateShapeText(clickedShape.id, '');
-      }
-    },
-    [setSelectedMap, shapes, updateShapeText]
-  );
-
-  useEffect(() => {
-    if (editingId && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editingId]);
-
-  const aaa = useCallback(() => {}, []);
-
-  const boxStyles = useMemo(() => {
-    const minX = Math.min(curPosition.x, startPosition.x);
-    const minY = Math.min(curPosition.y, startPosition.y);
-    const width = Math.abs(curPosition.x - startPosition.x);
-    const height = Math.abs(curPosition.y - startPosition.y);
-    return {
-      top: minY + canvasPosition[1],
-      left: minX + canvasPosition[0],
-      width,
-      height,
-      backgroundColor: 'rgba(0, 0, 255, 0.3)',
-      border: '1px solid blue'
-    };
-  }, [
-    canvasPosition,
-    curPosition.x,
-    curPosition.y,
-    startPosition.x,
-    startPosition.y
-  ]);
-
-  const handleBoxSelection = useCallback(() => {
-    const { top, left, width, height } = boxStyles;
-    const bounds: IBounds = {
-      top: top - canvasPosition[1],
-      left: left - canvasPosition[0],
-      right: left + width,
-      bottom: top + height
-    };
-    const eleMap = findElementsInBox(bounds, shapes, connections);
-    setSelectedMap(mapToObject<string, EElement>(eleMap));
-  }, [boxStyles, canvasPosition, connections, setSelectedMap, shapes]);
-
-  const updateSelectionBox = useCallback((offsetX: number, offsetY: number) => {
-    setCurPosition({ x: offsetX, y: offsetY });
-  }, []);
-
   const handleDelete = useCallback(() => {
     if (Object.keys(selectedMap).length > 0) {
       setShapes(shapes.filter(shape => !selectedMap[shape.id]));
       setConnections(connections.filter(shape => !selectedMap[shape.id]));
       setSelectedMap({});
     }
-  }, [
-    connections,
-    selectedMap,
-    setConnections,
-    setSelectedMap,
-    setShapes,
-    shapes
-  ]);
-
-  const moveShapes = useCallback(
-    (newX: number, newY: number) => {
-      const { rectOffset, offsetMap } = moveStartInfo;
-      if (multipleSelectRect) {
-        const { width: rectWidth, height: rectHeight } = multipleSelectRect;
-        const newRectX = newX - rectOffset.distanceX,
-          newRectY = newY - rectOffset.distanceY;
-        const selectedShapeIds = selectedShapes.map(shape => shape.id);
-        const {
-          snapX: rectSnapX,
-          snapY: rectSnapY,
-          helpLine
-        } = getSnapData(
-          newRectX,
-          newRectY,
-          rectWidth,
-          rectHeight,
-          selectedShapeIds,
-          shapes
-        );
-        setHelpLineVals(helpLine);
-        const newShapes = shapes.map(shape => {
-          if (selectedMap[shape.id]) {
-            const { width, height, id } = shape;
-            const distanceData = offsetMap.get(id);
-            const distanceX = distanceData?.distanceX || 0;
-            const distanceY = distanceData?.distanceY || 0;
-            const shapeX = rectSnapX - distanceX,
-              shapeY = rectSnapY - distanceY;
-            return {
-              ...shape,
-              x: shapeX,
-              y: shapeY,
-              connectionPoints: shape.connectionPoints.map(point =>
-                getConnectionPointVal(
-                  shapeX,
-                  shapeY,
-                  width,
-                  height,
-                  point.direction
-                )
-              )
-            };
-          } else return shape;
-        });
-        setShapes(newShapes);
-      }
-    },
-    [
-      moveStartInfo,
-      multipleSelectRect,
-      selectedMap,
-      selectedShapes,
-      setShapes,
-      shapes
-    ]
-  );
-
-  const resizeShapes = useCallback(
-    (cursorX: number, cursorY: number) => {
-      if (resizeStartInfo) {
-        const map = calcResizedShape(cursorX, cursorY, resizeStartInfo);
-        const newShapes = shapes.map(shape =>
-          map.has(shape.id) ? map.get(shape.id)! : shape
-        );
-        setShapes(newShapes);
-      }
-    },
-    [resizeStartInfo, setShapes, shapes]
-  );
-
-  const handleDragover = (e: DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = useCallback(
-    (e: any) => {
-      const { offsetX, offsetY } = e;
-      const { name } = JSON.parse(e.dataTransfer.getData('json'));
-      addShape(name, offsetX, offsetY);
-    },
-    [addShape]
-  );
-
-  const handleDoubleClick = useCallback(
-    (e: MouseEvent) => {
-      const { offsetX, offsetY } = e;
-      startEditing(offsetX, offsetY);
-    },
-    [startEditing]
-  );
-
-  const drawVirtualConnection = useCallback(
-    (offsetX: number, offsetY: number) => {
-      // 从连接点到鼠标移动位置画虚线
-      if (startConnectionPoint) {
-        const { shape, point } = startConnectionPoint;
-        const { x: fromX, y: fromY } = point;
-        let toShape: IShape, toPoint: IConnectionPoint;
-        // 鼠标移到了目标连接点上
-        if (hoveringConnectionPoint) {
-          toShape = hoveringConnectionPoint.shape;
-          toPoint = hoveringConnectionPoint.point;
-        } else {
-          // 鼠标移到的地方没有形状及连接点
-          const endPoint = getVirtualEndPoint(offsetX, offsetY, fromX, fromY);
-          toShape = endPoint.shape;
-          toPoint = endPoint.point;
-        }
-
-        setPreparedConnection({
-          id: 'prepared-connection',
-          fromShape: shape,
-          fromPoint: point,
-          toPoint,
-          toShape,
-          strokeColor: COLOR_BORDER
-        });
-      }
-    },
-    [hoveringConnectionPoint, startConnectionPoint]
-  );
-
-  // const handleClick = useCallback((e: MouseEvent) => {
-
-  // }, [])
+  }, [connections, selectedMap, setConnections, setSelectedMap, setShapes, shapes]);
 
   const updateStagePosition = useCallback(
     (offsetX: number, offsetY: number) => {
       const { x, y } = canvasStartOffset;
       const DValueX = offsetX - x;
       const DValueY = offsetY - y;
-      updateCanvasPosition([
-        canvasPosition[0] + DValueX,
-        canvasPosition[1] + DValueY
-      ]);
+      updateCanvasPosition([canvasPosition[0] + DValueX, canvasPosition[1] + DValueY]);
     },
     [canvasPosition, canvasStartOffset, updateCanvasPosition]
   );
 
   const handleMouseDown = useCallback(
     (e: MouseEvent) => {
-      const { offsetX, offsetY, ctrlKey } = e;
-      
+      const { ctrlKey } = e;
+      const offsetX = e.offsetX / canvasScale,
+        offsetY = e.offsetY / canvasScale;
       if (e.button === 1) {
         setCanvasStartOffset({ x: offsetX, y: offsetY });
         setMode(EMouseMoveMode.MOVE_CANVAS);
         return;
       }
-      if (e.target === inputRef.current) return;
-      // 与光标相交的连接点
-      const intersectedConnectionPoint = getIntersectedConnectionPoint(
+      const editInputElement = document.getElementById('editing-input-box');
+      if (e.target === editInputElement) return;
+      const { intersectedConnectionPoint, intersectedShape, intersectConnectionId, intersectedResizeCtrlPoint } = getIntersectedInfo(
         shapes,
+        connections,
+        multipleSelectRect,
         offsetX,
         offsetY
-      );
-      // 与光标相交的形状
-      const intersectedShape = getIntersectedShape(shapes, offsetX, offsetY); // TODO: 这里一定要先计算出来吗？
-      // 与光标相交的连接线
-      const intersectConnectionId = getIntersectedConnectionId(
-        offsetX,
-        offsetY,
-        connections
-      );
-      // 与光标相交的缩放控制点
-      const intersectedResizeCtrlPoint = getIntersectedControlPoint(
-        offsetX,
-        offsetY,
-        multipleSelectRect
       );
       if (intersectedConnectionPoint) {
         // 与连接点相交：画线
@@ -508,17 +182,13 @@ export const Canvas: React.FC<IProps> = props => {
           if (selectedMap[id]) {
             newMap.delete(id);
           } else {
-            const type = intersectedShape?.id
-              ? EElement.SHAPE
-              : EElement.CONNECTION;
+            const type = intersectedShape?.id ? EElement.SHAPE : EElement.CONNECTION;
             newMap.set(id, type);
           }
         } else {
           if (intersectedShape) {
             // 单选形状
-            const isPointInSelectedShape = selectedShapes.find(
-              shape => shape.id === intersectedShape?.id
-            );
+            const isPointInSelectedShape = selectedShapes.find(shape => shape.id === intersectedShape?.id);
             let newSelectedShapes = selectedShapes;
 
             // 如果点击的是选框外的图形，重新设置选框内容
@@ -526,13 +196,7 @@ export const Canvas: React.FC<IProps> = props => {
               newSelectedShapes = [intersectedShape];
               newMap = new Map([[intersectedShape.id, EElement.SHAPE]]);
             }
-            const newMouseMoveInfo = getMouseMoveInfo(
-              newMap,
-              connections,
-              newSelectedShapes,
-              offsetX,
-              offsetY
-            );
+            const newMouseMoveInfo = getMouseMoveInfo(newMap, connections, newSelectedShapes, offsetX, offsetY);
             setMode(EMouseMoveMode.MOVE);
             setMoveStartInfo(newMouseMoveInfo);
           } else if (intersectConnectionId) {
@@ -543,56 +207,40 @@ export const Canvas: React.FC<IProps> = props => {
         setSelectedMap(mapToObject<string, EElement>(newMap));
       } else {
         // 不与任何元素相交
-        setStartPosition({ x: e.offsetX, y: e.offsetY });
-        setCurPosition({ x: e.offsetX, y: e.offsetY });
+        setStartPosition({
+          x: e.offsetX / canvasScale,
+          y: e.offsetY / canvasScale
+        });
+        setCurPosition({
+          x: e.offsetX / canvasScale,
+          y: e.offsetY / canvasScale
+        });
         setMode(EMouseMoveMode.BOX_SELECTION);
         setSelectedMap({});
       }
     },
     [
+      canvasScale,
       connections,
       hoveringCtrlPoint?.direction,
       multipleSelectRect,
       selectedMap,
       selectedShapes,
+      setCurPosition,
+      setMoveStartInfo,
+      setResizeStartInfo,
       setSelectedMap,
+      setStartConnectionPoint,
+      setStartPosition,
       shapes
     ]
   );
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      const { offsetX, offsetY } = e;
-      const [hoveringShape] = shapes.filter(shape =>
-        isPointInShape(offsetX, offsetY, shape)
-      );
-      const [hoveringConnection] = connections.filter(connection =>
-        isPointInLine(offsetX, offsetY, connection.id)
-      );
-      // 设置悬停连接线
-      hoveringConnection
-        ? setHoveringConnectionId(hoveringConnection.id)
-        : setHoveringConnectionId('');
-      // 设置悬停形状
-      hoveringShape ? setHoveringId(hoveringShape.id) : setHoveringId('');
-      // 设置悬停缩放控制点
-      if (multipleSelectRect) {
-        const ctrlPoint = getIntersectedControlPoint(
-          offsetX,
-          offsetY,
-          multipleSelectRect
-        );
-        setHoveringCtrlPoint(ctrlPoint);
-      }
-      // 设置悬停连接点
-      const connectionPoint = getIntersectedConnectionPoint(
-        shapes,
-        offsetX,
-        offsetY
-      );
-      connectionPoint
-        ? setHoveringConnectionPoint(connectionPoint)
-        : setHoveringConnectionPoint(null);
+      const offsetX = e.offsetX / canvasScale,
+        offsetY = e.offsetY / canvasScale;
+      setHoveringElement(multipleSelectRect, offsetX, offsetY);
 
       switch (mode) {
         case EMouseMoveMode.MOVE:
@@ -615,8 +263,8 @@ export const Canvas: React.FC<IProps> = props => {
       }
     },
     [
-      shapes,
-      connections,
+      canvasScale,
+      setHoveringElement,
       multipleSelectRect,
       mode,
       moveShapes,
@@ -627,17 +275,21 @@ export const Canvas: React.FC<IProps> = props => {
     ]
   );
 
+  const resetStates = useCallback(() => {
+    setStartConnectionPoint(null);
+    setPreparedConnection(null);
+    setHelpLineVals(DEFAULT_HELP_LINE_VAL);
+    setMode(EMouseMoveMode.DEFAULT);
+  }, [setPreparedConnection, setStartConnectionPoint]);
+
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      const { offsetX, offsetY } = e;
+      const offsetX = e.offsetX / canvasScale,
+        offsetY = e.offsetY / canvasScale;
       if (mode === EMouseMoveMode.BOX_SELECTION) {
         handleBoxSelection();
       }
-      const connectionPoint = getIntersectedConnectionPoint(
-        shapes,
-        offsetX,
-        offsetY
-      );
+      const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
       if (connectionPoint && startConnectionPoint) {
         const { shape, point } = startConnectionPoint;
         setConnections([
@@ -652,66 +304,21 @@ export const Canvas: React.FC<IProps> = props => {
           }
         ]);
       }
-      setStartConnectionPoint(null);
-      setPreparedConnection(null);
-      setHelpLineVals(DEFAULT_HELP_LINE_VAL);
-      setMode(EMouseMoveMode.DEFAULT);
-      historyManager.push(shapes);
+      resetStates();
     },
-    [
-      connections,
-      handleBoxSelection,
-      mode,
-      setConnections,
-      shapes,
-      startConnectionPoint
-    ]
+    [canvasScale, connections, handleBoxSelection, mode, resetStates, setConnections, shapes, startConnectionPoint]
   );
-
-  const handleTextChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEditingText(e.target.value);
-    },
-    []
-  );
-
-  const handleTextSubmit = useCallback(() => {
-    updateShapeText(editingId, editingText);
-    setEditingText('');
-    setEditingId('');
-  }, [editingId, editingText, updateShapeText]);
-
-  const inputStyle = useMemo(() => {
-    const editingShape = shapes.find(shape => shape.id === editingId);
-    let style: { [key: string]: any } = {
-      position: 'absolute'
-    };
-    if (editingShape) {
-      const { x, y, width } = editingShape;
-      style = {
-        ...style,
-        left: x - width / 2 - 2 + canvasPosition[0],
-        top: y - INPUT_OFFSET.y + canvasPosition[1],
-        width: `${editingShape.width}px`
-      };
-    }
-    return style;
-  }, [canvasPosition, editingId, shapes]);
 
   return useMemo(() => {
     return (
       <div className={`comp-canvas ${className || ''}`}>
         <canvas
-          onDragOver={handleDragover}
-          onDrop={e => handleDrop(e.nativeEvent)}
           onMouseDown={e => handleMouseDown(e.nativeEvent)}
           onMouseMove={e => handleMouseMove(e.nativeEvent)}
           onMouseUp={e => handleMouseUp(e.nativeEvent)}
-          onDoubleClick={e => handleDoubleClick(e.nativeEvent)}
-          // onClick={(e) => handleClick(e.nativeEvent)}
           id="drawing"
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEITHT}
+          width={CANVAS_WIDTH * canvasScale}
+          height={CANVAS_HEITHT * canvasScale}
           ref={canvasRef}
           style={{
             left: canvasPosition[0],
@@ -720,63 +327,12 @@ export const Canvas: React.FC<IProps> = props => {
         >
           这是一个画布
         </canvas>
-        {mode === EMouseMoveMode.BOX_SELECTION && (
-          <div
-            style={{
-              pointerEvents: 'none',
-              position: 'absolute',
-              ...boxStyles
-            }}
-          ></div>
-        )}
-        {editingId && (
-          <input
-            style={inputStyle}
-            className="input-text"
-            ref={inputRef}
-            value={editingText}
-            type="text"
-            onChange={handleTextChange}
-            onBlur={handleTextSubmit}
-          />
-        )}
-        <ContextMenuModal
-          open={isShowContextMenu}
-          style={contextMenuModalStyle}
-          onCancel={() => {
-            setIsShowContextMenu(false);
-          }}
-        >
-          <div>
-            <Typography.Link className="w100p" onClick={handleDelete}>
-              <div className="context-menu-item">
-                <span>删除</span>
-                <span className="key">Delete</span>
-              </div>
-            </Typography.Link>
-          </div>
-        </ContextMenuModal>
+        <SelectionBox isShow={mode === EMouseMoveMode.BOX_SELECTION} boxStyles={boxStyles} />
+        <EditInput />
+        <ContextMenu menus={[{ label: '删除', key: 'Delete', handle: handleDelete }]} />
       </div>
     );
-  }, [
-    boxStyles,
-    canvasPosition,
-    className,
-    contextMenuModalStyle,
-    editingId,
-    editingText,
-    handleDelete,
-    handleDoubleClick,
-    handleDrop,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-    handleTextChange,
-    handleTextSubmit,
-    inputStyle,
-    isShowContextMenu,
-    mode
-  ]);
+  }, [boxStyles, canvasPosition, canvasScale, className, handleDelete, handleMouseDown, handleMouseMove, handleMouseUp, mode]);
 };
 
 export default Canvas;

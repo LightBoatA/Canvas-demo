@@ -16,3 +16,11 @@ export const FONT_SIZE_OPTIONS = [
   { value: 18, label: '18px' },
   { value: 20, label: '20px' }
 ];
+
+export const CANVAS_SCALE_OPTIONS = [
+  { value: 2, label: '200%' },
+  { value: 1.5, label: '150%' },
+  { value: 1, label: '100%' },
+  { value: 0.75, label: '75%' },
+  { value: 0.5, label: '50%' },
+]

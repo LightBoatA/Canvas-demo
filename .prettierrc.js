@@ -18,5 +18,5 @@ module.exports = {
   // 换行符使用 crlf/lf/auto
   endOfLine: 'auto',
   // 每行最大宽度 300
-  printWidth: 80,
+  printWidth: 200,
 }

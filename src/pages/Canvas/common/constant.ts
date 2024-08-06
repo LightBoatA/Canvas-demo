@@ -14,6 +14,9 @@ export const SNAP_DISTANCE = 3; // 吸附阈值
 export const STRING_CONNECTOR = ':'; // 两个字符串组合的连接符，连接两个ID等
 export const HALF_LINE_WIDTH = 5; // 连线粗细的一半
 
+export const MIN_SCALE = 0.125;
+export const MAX_SCALE = 4;
+
 export const COLOR_CONNECT_POINT = "#FF6969";
 
 // export const COLOR_SHAPE = "#EF9C66";#585e64
@@ -152,7 +155,7 @@ export const DEFAULT_HELP_LINE_VAL: IHelpLineData = {
 }
 
 // 不同方向对应的缩放光标样式
-export const cursorDirectionMap = {
+export const cursorDirectionMap: { [key: string] : string } = {
     [EDirection.LEFT_TOP]: "nwse-resize",
     [EDirection.LEFT_BOTTOM]: "nesw-resize",
     [EDirection.RIGHT_BOTTOM]: "nwse-resize",

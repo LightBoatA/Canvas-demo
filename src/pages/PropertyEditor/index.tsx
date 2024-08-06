@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { green, red, blue, grey } from '@ant-design/colors';
 import { ColorPicker, Select, Space } from 'antd';
 import './index.less';
-import { FONT_SIZE_OPTIONS, colorBtns } from './common';
+import { CANVAS_SCALE_OPTIONS, FONT_SIZE_OPTIONS, colorBtns } from './common';
 import { useShapes } from '../../hooks/useShapes';
 import { useCommon } from '../../hooks/useCommon';
 import { EElement, IConnection, IShape } from '../Canvas/common';
@@ -16,7 +16,7 @@ export const PropertyEditor: React.FC<IProps> = props => {
   const { className } = props;
   const { shapes, updateShapeByIds } = useShapes();
   const { updateConnectionByIds } = useConnections();
-  const { selectedMap } = useCommon();
+  const { selectedMap, canvasScale, updateCanvasScale } = useCommon();
   const presets = useMemo(() => {
     return [
       { label: '红色', colors: red },
@@ -82,10 +82,26 @@ export const PropertyEditor: React.FC<IProps> = props => {
               </ColorPicker>
             );
           })}
+          <Select
+            value={canvasScale}
+            onChange={value => {
+              updateCanvasScale(value);
+            }}
+            options={CANVAS_SCALE_OPTIONS}
+          />
         </Space>
       </div>
     );
-  }, [className, firstShape?.fontSize, presets, selectedMap, updateConnectionByIds, updateShapeByIds]);
+  }, [
+    canvasScale,
+    className,
+    firstShape?.fontSize,
+    presets,
+    selectedMap,
+    updateCanvasScale,
+    updateConnectionByIds,
+    updateShapeByIds
+  ]);
 };
 
 export default PropertyEditor;

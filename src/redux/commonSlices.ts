@@ -3,9 +3,9 @@ import { StoreState } from './store';
 import { EElement } from '../pages/Canvas/common';
 
 export type ICommon = {
-  // selectedMap: Map<string, EElement>
   selectedMap: { [key: string]: EElement },
   canvasPosition: number[],
+  canvasScale: number,
 };
 export const COMMON = 'common';
 export const commonSlice = createSlice({
@@ -13,6 +13,7 @@ export const commonSlice = createSlice({
   initialState: {
     selectedMap: {},
     canvasPosition: [20, 20],
+    canvasScale: 1,
   },
   reducers: {
     setKeyValue(state, action: PayloadAction<{ key: keyof ICommon, value: any }>) {

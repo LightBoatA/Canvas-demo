@@ -1,16 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommon } from '../../hooks/useCommon';
 import { useShapes } from '../../hooks/useShapes';
 import { INPUT_OFFSET, isPointInShape, EElement } from '../../pages/Canvas/common';
 import { getCanvasEle } from '../../utils/util';
-interface IProps {
-}
+import './index.less';
+interface IProps {}
 export const EditInput: React.FC<IProps> = props => {
   const { shapes, updateShapeByIds } = useShapes();
   const { canvasPosition, setSelectedMap, canvasScale } = useCommon();
   const [editingText, setEditingText] = useState<string>('');
   const [editingId, setEditingId] = useState<string>('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const updateShapeText = useCallback(
     (id: string, newText: string) => {
@@ -40,14 +40,14 @@ export const EditInput: React.FC<IProps> = props => {
     const canvas = getCanvasEle();
     const handleDoubleClick = (e: MouseEvent) => {
       const { offsetX, offsetY } = e;
-      startEditing(offsetX, offsetY);
+      startEditing(offsetX / canvasScale, offsetY / canvasScale);
     };
 
     canvas?.addEventListener('dblclick', handleDoubleClick);
     return () => {
       canvas?.removeEventListener('dblclick', handleDoubleClick);
     };
-  }, [startEditing]);
+  }, [canvasScale, startEditing]);
 
   useEffect(() => {
     if (editingId && inputRef.current) {
@@ -57,22 +57,23 @@ export const EditInput: React.FC<IProps> = props => {
 
   const inputStyle = useMemo(() => {
     const editingShape = shapes.find(shape => shape.id === editingId);
-    let style: { [key: string]: any } = {
-      position: 'absolute'
-    };
+    let style: CSSProperties = {};
     if (editingShape) {
-      const { x, y, width } = editingShape;
+      const { x, y, width, height, fontSize, text } = editingShape;
+      console.log(editingShape);
+
       style = {
-        ...style,
-        left: x - width / 2 - 2 + canvasPosition[0],
-        top: y - INPUT_OFFSET.y + canvasPosition[1],
-        width: `${editingShape.width}px`
+        left: (x  - width / 2) * canvasScale  + canvasPosition[0],
+        top: (y - height / 2) * canvasScale + canvasPosition[1],
+        width: `${width * canvasScale}px`,
+        height: `${height * canvasScale}px`,
+        fontSize: fontSize * canvasScale,
       };
     }
     return style;
-  }, [canvasPosition, editingId, shapes]);
+  }, [canvasPosition, canvasScale, editingId, shapes]);
 
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditingText(e.target.value);
   }, []);
 
@@ -86,16 +87,19 @@ export const EditInput: React.FC<IProps> = props => {
     return (
       <>
         {editingId && (
-          <input
+          <div 
+          className="input-text-wrap"
             style={inputStyle}
-            className="input-text"
-            id="editing-input-box"
-            ref={inputRef}
-            value={editingText}
-            type="text"
-            onChange={handleTextChange}
-            onBlur={handleTextSubmit}
-          />
+          >
+            <textarea
+              className="input-text"
+              id="editing-input-box"
+              ref={inputRef}
+              value={editingText}
+              onChange={handleTextChange}
+              onBlur={handleTextSubmit}
+            />
+          </div>
         )}
       </>
     );

@@ -354,11 +354,6 @@ export const drawShape = (
             if (connections && connections.length) {
                 drawConnections(ctx, shapes, connections, hoveringConnectionId);
             }
-            // // 绘制图形选中后的各种控制图形
-            // if (selectedId === shape.id) {
-            //     drawCtrlShape(ctx, shape);
-            //     drawConnectPoints(ctx, shape, hoveringConnectionPoint);
-            // }
             // 绘制鼠标悬停到图形上的效果
             if (hoveringId === shape.id) {
                 drawHoveringShape(ctx, shape);
@@ -370,8 +365,6 @@ export const drawShape = (
                 ctx.fillStyle = fontColor;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                // ctx.font = "bold 14px sans-serif"
-                // ctx.font = "14px sans-serif"
                 ctx.font = `${fontSize}px sans-serif`
                 ctx.fillText(text, x, y);
             }
@@ -382,9 +375,7 @@ export const drawShape = (
         if (multipleSelectRect) {
             const { x, y, width, height } = multipleSelectRect;
             ctx.strokeStyle = COLOR_SELECTED_COLOR;
-            // ctx.setLineDash([5, 5]);
             ctx.strokeRect(x - width / 2 , y - height / 2, width, height);
-            // ctx.setLineDash([]);
             drawControlPoints(ctx, multipleSelectRect);
 
         }

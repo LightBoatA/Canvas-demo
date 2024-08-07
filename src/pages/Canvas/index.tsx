@@ -199,12 +199,12 @@ export const Canvas: React.FC<IProps> = props => {
       } else {
         // 不与任何元素相交
         setStartPosition({
-          x: e.offsetX / canvasScale,
-          y: e.offsetY / canvasScale
+          x: e.offsetX,
+          y: e.offsetY
         });
         setCurPosition({
-          x: e.offsetX / canvasScale,
-          y: e.offsetY / canvasScale
+          x: e.offsetX,
+          y: e.offsetY
         });
         setMode(EMouseMoveMode.BOX_SELECTION);
         setSelectedMap({});
@@ -245,7 +245,7 @@ export const Canvas: React.FC<IProps> = props => {
           drawVirtualConnection(offsetX, offsetY);
           break;
         case EMouseMoveMode.BOX_SELECTION:
-          updateSelectionBox(offsetX, offsetY);
+          updateSelectionBox(e.offsetX, e.offsetY);
           break;
         case EMouseMoveMode.MOVE_CANVAS:
           updateStagePosition(offsetX, offsetY);

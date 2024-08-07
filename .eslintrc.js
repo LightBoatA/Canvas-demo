@@ -6,7 +6,7 @@ module.exports = {
       es6: true
   },
   extends: [
-      'eslint:recommended',
+      'eslint:recommended', // 启用推荐配置
       'airbnb-typescript',
   ],
   // 解析器配置参数

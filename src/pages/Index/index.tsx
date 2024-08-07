@@ -6,6 +6,7 @@ import { EPage } from './common';
 import Home from '../Home';
 import Canvas from '../Canvas';
 import CenterBox from '../CenterBox';
+import { TestClassComp } from '../../components/TestClassComp';
 const items: MenuProps['items'] = [
   {
     label: '首页',
@@ -49,6 +50,7 @@ export const Index: React.FC<IProps> = props => {
         <div className="content">
           {contentComp}
         </div>
+        <TestClassComp text='外层传'/>
         {/* <div className="footer">
           底部
         </div> */}

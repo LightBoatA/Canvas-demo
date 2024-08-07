@@ -30,6 +30,7 @@ import { useMoveShape } from '../../hooks/useMoveShape';
 import { useVirtualConnections } from '../../hooks/useVirtualConnection';
 import { useHovering } from '../../hooks/useHovering';
 import { useAddConnection } from '../../hooks/useAddConnection';
+import { useDeleteElement } from '../../hooks/useDeleteElement';
 
 interface IProps {
   className?: string;
@@ -60,6 +61,8 @@ export const Canvas: React.FC<IProps> = props => {
   const { setHoveringElement, hoveringCtrlPoint, hoveringId, hoveringConnectionId, hoveringConnectionPoint } = useHovering();
   // 添加连线
   const { handleAddConnection } = useAddConnection();
+  // 删除元素
+  const { handleDelete } = useDeleteElement();
   // 舞台缩放
   useScale();
   // 形状拖放
@@ -113,14 +116,6 @@ export const Canvas: React.FC<IProps> = props => {
     selectedMap,
     shapes
   ]);
-
-  const handleDelete = useCallback(() => {
-    if (Object.keys(selectedMap).length > 0) {
-      setShapes(shapes.filter(shape => !selectedMap[shape.id]));
-      setConnections(connections.filter(shape => !selectedMap[shape.id]));
-      setSelectedMap({});
-    }
-  }, [connections, selectedMap, setConnections, setSelectedMap, setShapes, shapes]);
 
   const updateStagePosition = useCallback(
     (offsetX: number, offsetY: number) => {

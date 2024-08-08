@@ -1,3 +1,7 @@
+import { HistoryManager } from "../pages/Canvas/common/HistoryManager";
+import { IHistoryState } from "./type";
+
+export const historyManager = new HistoryManager<IHistoryState>();
 // 字符串转json文件
 export const stringToJsonFile = async (str: string, title: string = '常用曲速合集.json') => {
   if (!str) return;

@@ -31,6 +31,7 @@ import { useVirtualConnections } from '../../hooks/useVirtualConnection';
 import { useHovering } from '../../hooks/useHovering';
 import { useAddConnection } from '../../hooks/useAddConnection';
 import { useDeleteElement } from '../../hooks/useDeleteElement';
+import { useHistory } from '../../hooks/useHistory';
 
 interface IProps {
   className?: string;
@@ -46,10 +47,12 @@ export const Canvas: React.FC<IProps> = props => {
   const [mode, setMode] = useState<EMouseMoveMode>(EMouseMoveMode.DEFAULT);
   // 画布起始位置
   const [canvasStartOffset, setCanvasStartOffset] = useState<IPoint>(DEFAULT_POINT);
+  // 是否按下空格键
+  const [isSpaceKeyDown, setIsSpaceKeyDown] = useState<boolean>(false);
   // 形状
-  const { shapes, setShapes } = useShapes();
+  const { shapes } = useShapes();
   // 连线
-  const { connections, setConnections } = useConnections();
+  const { connections } = useConnections();
   // 常用参数
   const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition, canvasScale } = useCommon();
   // 框选相关
@@ -73,7 +76,7 @@ export const Canvas: React.FC<IProps> = props => {
   const { setStartConnectionPoint, preparedConnection, setPreparedConnection, startConnectionPoint, drawVirtualConnection } =
     useVirtualConnections(hoveringConnectionPoint);
   // 鼠标样式
-  useCursorStyle(mode, hoveringCtrlPoint);
+  useCursorStyle(mode, hoveringCtrlPoint, isSpaceKeyDown); 
 
   useEffect(() => {
     if (canvasRef.current && !ctxRef.current) {
@@ -86,6 +89,26 @@ export const Canvas: React.FC<IProps> = props => {
       ctxRef.current.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEITHT);
     }
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ') {
+        setIsSpaceKeyDown(true);
+      }
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === ' ') {
+        setIsSpaceKeyDown(false);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    }
+  }, [])
 
   useEffect(() => {
     if (ctxRef.current) {
@@ -134,7 +157,7 @@ export const Canvas: React.FC<IProps> = props => {
       // 编辑框
       if (e.target === document.getElementById('editing-input-box')) return;
       // 中键：拖动画布
-      if (e.button === 1) {
+      if (e.button === 1 || isSpaceKeyDown) {
         setCanvasStartOffset({ x: offsetX, y: offsetY });
         setMode(EMouseMoveMode.MOVE_CANVAS);
         return;
@@ -192,34 +215,14 @@ export const Canvas: React.FC<IProps> = props => {
         }
         setSelectedMap(mapToObject<string, EElement>(newMap));
       } else {
-        // 不与任何元素相交
-        setStartPosition({
-          x: e.offsetX,
-          y: e.offsetY
-        });
-        setCurPosition({
-          x: e.offsetX,
-          y: e.offsetY
-        });
+        // 不与任何元素相交，框选
+        setStartPosition({ x: e.offsetX,  y: e.offsetY });
+        setCurPosition({ x: e.offsetX, y: e.offsetY });
         setMode(EMouseMoveMode.BOX_SELECTION);
         setSelectedMap({});
       }
     },
-    [
-      canvasScale,
-      connections,
-      hoveringCtrlPoint?.direction,
-      multipleSelectRect,
-      selectedMap,
-      selectedShapes,
-      setCurPosition,
-      setMoveStartInfo,
-      setResizeStartInfo,
-      setSelectedMap,
-      setStartConnectionPoint,
-      setStartPosition,
-      shapes
-    ]
+    [canvasScale, connections, hoveringCtrlPoint?.direction, isSpaceKeyDown, multipleSelectRect, selectedMap, selectedShapes, setCurPosition, setMoveStartInfo, setResizeStartInfo, setSelectedMap, setStartConnectionPoint, setStartPosition, shapes]
   );
 
   const handleMouseMove = useCallback(

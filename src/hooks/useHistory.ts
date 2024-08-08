@@ -1,23 +1,40 @@
 import { useCallback, useEffect } from 'react';
 import { HistoryManager } from '../pages/Canvas/common/HistoryManager';
-import { IShape } from '../pages/Canvas/common';
+import { IConnection, IShape } from '../pages/Canvas/common';
+import { useShapes } from './useShapes';
+import { useConnections } from './useConnections';
+import { IHistoryState } from '../utils/type';
+import { historyManager } from '../utils/util';
 
-const historyManager = new HistoryManager<IShape[]>();
+
 export const useHistory = () => {
-  
-  const handleUndo = useCallback(() => {
-    const prevShapes = historyManager.undo();
-    if (prevShapes) {
-      // setShapes(prevShapes);
+  const { shapes, setShapes } = useShapes();
+  const { connections, setConnections } = useConnections();
+
+  const resetStates = useCallback((state: IHistoryState | null) => {
+    if (state) {
+      const { shapes: historyShapes, connections: historyConnections } = state;
+      setShapes(historyShapes);
+      setConnections(historyConnections)
     }
-  }, []);
+  }, [setConnections, setShapes])
+
+  const handleUndo = useCallback(() => {
+    const prevState = historyManager.undo();
+    resetStates(prevState);
+  }, [resetStates]);
 
   const handleRedo = useCallback(() => {
-    const nextShapes = historyManager.redo();
-    if (nextShapes) {
-      // setShapes(nextShapes);
-    }
-  }, []);
+    const nextState = historyManager.redo();
+    resetStates(nextState);
+  }, [resetStates]);
+
+  // const historyPush = useCallback(() => {
+  //   historyManager.push({
+  //     shapes,
+  //     connections
+  //   })
+  // }, [connections, shapes]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,6 +52,6 @@ export const useHistory = () => {
   });
 
   return {
-
+    // historyPush,
   }
 };

@@ -3,21 +3,21 @@ import { useElement } from './useElement';
 import { IHistoryState } from '../utils/type';
 import { historyManager } from '../utils/util';
 
-
 export const useHistory = () => {
   const { setConnections, setShapes } = useElement();
 
-  const pushHistory = useCallback(() => {
+  const pushHistory = useCallback(() => {}, []);
 
-  }, [])
-  
-  const resetStates = useCallback((state: IHistoryState | null) => {
-    if (state) {
-      const { shapes: historyShapes, connections: historyConnections } = state;
-      setShapes(historyShapes);
-      setConnections(historyConnections)
-    }
-  }, [setConnections, setShapes])
+  const resetStates = useCallback(
+    (state: IHistoryState | null) => {
+      if (state) {
+        const { shapes: historyShapes, connections: historyConnections } = state;
+        setShapes(historyShapes);
+        setConnections(historyConnections);
+      }
+    },
+    [setConnections, setShapes]
+  );
 
   const handleUndo = useCallback(() => {
     const prevState = historyManager.undo();
@@ -46,5 +46,5 @@ export const useHistory = () => {
 
   return {
     // historyPush,
-  }
+  };
 };

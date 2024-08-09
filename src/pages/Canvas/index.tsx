@@ -10,11 +10,14 @@ import {
   drawShape,
   getMouseMoveInfo,
   EDirection,
-  getIntersectedInfo,
   getSelectedShapes,
   calcMultipleSelectRect,
   IShape,
-  IShapeConnectionPoint
+  IShapeConnectionPoint,
+  getIntersectedConnectionPoint,
+  getIntersectedControlPoint,
+  getIntersectedShape,
+  getIntersectedConnectionId
 } from './common/index';
 import { mapToObject, objectToMap } from '../../utils/util';
 import { useCommon } from '../../hooks/useCommon';
@@ -57,7 +60,7 @@ export const Canvas: React.FC<IProps> = props => {
   // 历史记录
   useHistory();
   // 常用参数
-  const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition, canvasScale } = useCommon();
+  const { selectedMap, setSelectedMap, canvasPosition, canvasScale } = useCommon();
   // 鼠标悬停相关
   const { setHoveringElement, hoveringCtrlPoint, hoveringId, hoveringConnectionId, hoveringConnectionPoint } = useHovering();
   // 添加连线
@@ -137,7 +140,7 @@ export const Canvas: React.FC<IProps> = props => {
   ]);
 
   // 开始移动画布
-  const startMoveCanvasHandler = useCallback(
+  const startMoveStageHandler = useCallback(
     (offsetX: number, offsetY: number) => {
       handleStageMoveStart({ x: offsetX, y: offsetY });
       setMode(EMouseMoveMode.MOVE_CANVAS);
@@ -243,38 +246,42 @@ export const Canvas: React.FC<IProps> = props => {
     (e: MouseEvent) => {
       const offsetX = e.offsetX / canvasScale;
       const offsetY = e.offsetY / canvasScale;
-      // 编辑框
-      if (e.target === document.getElementById('editing-input-box')) return;
-      // 中键：拖动画布
-      if (e.button === 1 || isSpaceKeyDown) {
-        startMoveCanvasHandler(offsetX, offsetY);
+
+      const isChooseInput = e.target === document.getElementById('editing-input-box');
+      if (isChooseInput) {
         return;
       }
 
-      const { intersectedConnectionPoint, intersectedShape, intersectConnectionId, intersectedResizeCtrlPoint } = getIntersectedInfo(
-        shapes,
-        connections,
-        multipleSelectRect,
-        offsetX,
-        offsetY
-      );
-      const isChooseConnectPoint = Boolean(intersectedConnectionPoint);
-      const isChooseResizePoint = Boolean(intersectedResizeCtrlPoint);
-      const isChooseShapeOrLine = Boolean(intersectedShape || intersectConnectionId);
+      const isChooseStage = e.button === 1 || isSpaceKeyDown;
+      if (isChooseStage) {
+        startMoveStageHandler(offsetX, offsetY);
+        return;
+      }
 
+      const intersectedConnectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
+      const isChooseConnectPoint = Boolean(intersectedConnectionPoint);
       if (isChooseConnectPoint) {
         startConnectHandler(intersectedConnectionPoint);
         return;
-      } else if (isChooseResizePoint) {
+      }
+
+      const intersectedResizeCtrlPoint = getIntersectedControlPoint(offsetX, offsetY, multipleSelectRect);
+      const isChooseResizePoint = Boolean(intersectedResizeCtrlPoint);
+      if (isChooseResizePoint) {
         startResizeHandler();
         return;
-      } else if (isChooseShapeOrLine) {
+      }
+
+      const intersectedShape = getIntersectedShape(shapes, offsetX, offsetY);
+      const intersectConnectionId = getIntersectedConnectionId(offsetX, offsetY, connections);
+      const isChooseShapeOrLine = Boolean(intersectedShape || intersectConnectionId);
+      if (isChooseShapeOrLine) {
         selectElementHandler(offsetX, offsetY, e.ctrlKey, intersectedShape, intersectConnectionId);
         return;
-      } else {
-        startBoxSelectHandler(e.offsetX, e.offsetY);
-        return;
       }
+
+      startBoxSelectHandler(e.offsetX, e.offsetY);
+      return;
     },
     [
       canvasScale,
@@ -282,7 +289,7 @@ export const Canvas: React.FC<IProps> = props => {
       shapes,
       connections,
       multipleSelectRect,
-      startMoveCanvasHandler,
+      startMoveStageHandler,
       startConnectHandler,
       startResizeHandler,
       selectElementHandler,
@@ -317,17 +324,7 @@ export const Canvas: React.FC<IProps> = props => {
           break;
       }
     },
-    [
-      canvasScale,
-      setHoveringElement,
-      multipleSelectRect,
-      mode,
-      handleMoving,
-      handleResizing,
-      handleConnecting,
-      handleBoxSelecting,
-      handleStageMoving
-    ]
+    [canvasScale, setHoveringElement, multipleSelectRect, mode, handleMoving, handleResizing, handleConnecting, handleBoxSelecting, handleStageMoving]
   );
 
   const resetStates = useCallback(() => {

@@ -1,13 +1,13 @@
-import { useCallback, useState } from "react";
-import { IShape, IConnectionPoint, getVirtualEndPoint, COLOR_BORDER, IShapeConnectionPoint, IConnection } from "../pages/Canvas/common";
+import { useCallback, useState } from 'react';
+import { IShape, IConnectionPoint, getVirtualEndPoint, COLOR_BORDER, IShapeConnectionPoint, IConnection } from '../pages/Canvas/common';
 
 /**
- * 虚连线 
+ * 虚连线
  */
 export const useVirtualConnections = (hoveringConnectionPoint: IShapeConnectionPoint | null) => {
   const [startConnectionPoint, setStartConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
   const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
-  
+
   const handleConnecting = useCallback(
     (offsetX: number, offsetY: number) => {
       // 从连接点到鼠标移动位置画虚线
@@ -40,8 +40,8 @@ export const useVirtualConnections = (hoveringConnectionPoint: IShapeConnectionP
   );
 
   const handleConnectStart = useCallback((startPoint: IShapeConnectionPoint | null) => {
-    setStartConnectionPoint(startPoint)
-  }, [])
+    setStartConnectionPoint(startPoint);
+  }, []);
 
   return {
     handleConnectStart,
@@ -50,5 +50,5 @@ export const useVirtualConnections = (hoveringConnectionPoint: IShapeConnectionP
     hoveringConnectionPoint,
     startConnectionPoint,
     handleConnecting
-  }
-}
+  };
+};

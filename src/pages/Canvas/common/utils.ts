@@ -122,39 +122,6 @@ export const getMouseMoveInfo = (
 };
 
 /**
- * 获取与光标相交的各种元素信息
- * @param shapes
- * @param connections
- * @param multipleSelectRect
- * @param offsetX
- * @param offsetY
- * @returns
- */
-export const getIntersectedInfo: any = (
-  shapes: IShape[],
-  connections: IConnection[],
-  multipleSelectRect: IRect | null,
-  offsetX: number,
-  offsetY: number
-) => {
-  // 与光标相交的连接点
-  const intersectedConnectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
-  // 与光标相交的形状
-  const intersectedShape = getIntersectedShape(shapes, offsetX, offsetY);
-  // 与光标相交的连接线
-  const intersectConnectionId = getIntersectedConnectionId(offsetX, offsetY, connections);
-  // 与光标相交的缩放控制点
-  const intersectedResizeCtrlPoint = getIntersectedControlPoint(offsetX, offsetY, multipleSelectRect);
-
-  return {
-    intersectedConnectionPoint,
-    intersectedShape,
-    intersectConnectionId,
-    intersectedResizeCtrlPoint
-  };
-};
-
-/**
  * 获取选择的形状
  * @param selectedMap 
  * @param shapes 

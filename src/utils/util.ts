@@ -117,5 +117,5 @@ export const deepClone = (obj: any) => {
  * 获取画布元素 
  */
 export const getCanvasEle = () => {
-  return document.getElementById('drawing');
+  return document.getElementById('drawing') as HTMLCanvasElement;
 }

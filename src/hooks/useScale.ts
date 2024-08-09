@@ -35,6 +35,5 @@ export const useScale = () => {
     };
   }, [canvasScale, updateCanvasScale]);
 
-  return {
-  }
+  return {};
 };

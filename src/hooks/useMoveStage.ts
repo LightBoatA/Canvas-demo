@@ -21,6 +21,6 @@ export const useMoveStage = () => {
 
   return {
     handleStageMoveStart,
-    handleStageMoving,
-  }
+    handleStageMoving
+  };
 };

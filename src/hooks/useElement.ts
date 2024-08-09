@@ -23,7 +23,7 @@ export const useElement = () => {
   const updateConnectionByIds = (data: { ids: string[]; key: keyof IConnection; data: any }) => {
     dispatch(connectionsActions.updateConnectionByIds(data));
   };
-  
+
   return {
     shapes,
     setShapes,

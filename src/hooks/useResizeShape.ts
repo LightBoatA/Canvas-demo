@@ -12,12 +12,14 @@ export const useResizeShape = (
   const [resizeStartInfo, setResizeStartInfo] = useState<IResizeStartInfo | null>(null);
   const { shapes, setShapes } = useElement();
 
-  const handleResizeStart = useCallback((info: IResizeStartInfo | null) => {
-    info && setResizeStartInfo(info);
-    setIsFrequentlyUpdating(true);
-    setLocalShapes(deepClone(shapes));
-
-  }, [setIsFrequentlyUpdating, setLocalShapes, shapes]);
+  const handleResizeStart = useCallback(
+    (info: IResizeStartInfo | null) => {
+      info && setResizeStartInfo(info);
+      setIsFrequentlyUpdating(true);
+      setLocalShapes(deepClone(shapes));
+    },
+    [setIsFrequentlyUpdating, setLocalShapes, shapes]
+  );
 
   const handleResizing = useCallback(
     (cursorX: number, cursorY: number) => {

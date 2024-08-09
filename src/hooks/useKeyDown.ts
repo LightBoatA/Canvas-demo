@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export const useKeyDown = () => {
   const [isSpaceKeyDown, setIsSpaceKeyDown] = useState<boolean>(false);
@@ -25,5 +25,5 @@ export const useKeyDown = () => {
 
   return {
     isSpaceKeyDown
-  }
-}
+  };
+};

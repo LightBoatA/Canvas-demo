@@ -21,7 +21,7 @@ export const useDeleteElement = () => {
         handleDelete();
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {

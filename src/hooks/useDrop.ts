@@ -17,7 +17,7 @@ export const useDrop = () => {
     },
     [setSelectedMap, setShapes, shapes]
   );
-  
+
   useEffect(() => {
     const handleDragover = (e: DragEvent) => {
       e.preventDefault();

@@ -26,8 +26,12 @@ export interface IPoint {
     y: number;
 }
 
+// 选中元素
+export interface ISelectedMapObj  { [key: string]: EElement }
+
 // 移动起始信息
 export interface IMoveStartInfo {
+    rectInfo: { rectWidth: number, rectHeight: number };
     rectOffset: { distanceX: number, distanceY: number }; // 选框相对于光标位置的偏移
     offsetMap: Map<string, { distanceX: number, distanceY: number }>; // 图形相对于选框位置的偏移
 }

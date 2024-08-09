@@ -10,7 +10,7 @@ import {
   isPointInShape
 } from './calculator';
 import { COMMON_SHAPE_SIZE, INIT_SHAPES, STRING_CONNECTOR } from './constant';
-import { EConnectPointDirection, EDirection, EElement, IBounds, IConnection, IConnectionPoint, IRect, IShape, IShapeData } from './types';
+import { EConnectPointDirection, EDirection, EElement, IBounds, IConnection, IConnectionPoint, IRect, ISelectedMapObj, IShape, IShapeData } from './types';
 
 /**
  * 获取形状的边界坐标值
@@ -153,3 +153,8 @@ export const getIntersectedInfo = (
     intersectedResizeCtrlPoint
   };
 };
+
+export const getSelectedShapes = (selectedMap: ISelectedMapObj, shapes: IShape[]) => {
+  if (Object.keys(selectedMap).length <= 0) return [];
+    return shapes.filter(shape => selectedMap[shape.id]);
+}

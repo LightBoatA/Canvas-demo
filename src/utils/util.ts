@@ -104,6 +104,18 @@ export const findValueObj = (arr: Array<any>, key: string, value: any, isEqual =
   return obj;
 };
 
+/**
+ * 深拷贝
+ * @param obj 
+ * @returns 
+ */
+export const deepClone = (obj: any) => {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * 获取画布元素 
+ */
 export const getCanvasEle = () => {
   return document.getElementById('drawing');
 }

@@ -3,19 +3,17 @@ import { green, red, blue, grey } from '@ant-design/colors';
 import { ColorPicker, Select, Space } from 'antd';
 import './index.less';
 import { CANVAS_SCALE_OPTIONS, FONT_SIZE_OPTIONS, colorBtns } from './common';
-import { useShapes } from '../../hooks/useShapes';
+import { useElement } from '../../hooks/useElement';
 import { useCommon } from '../../hooks/useCommon';
 import { EElement, IConnection, IShape } from '../Canvas/common';
 import { findValueObj } from '../../utils/util';
-import { useConnections } from '../../hooks/useConnections';
 
 interface IProps {
   className?: string;
 }
 export const PropertyEditor: React.FC<IProps> = props => {
   const { className } = props;
-  const { shapes, updateShapeByIds } = useShapes();
-  const { updateConnectionByIds } = useConnections();
+  const { shapes, updateShapeByIds, updateConnectionByIds } = useElement();
   const { selectedMap, canvasScale, updateCanvasScale } = useCommon();
   const presets = useMemo(() => {
     return [

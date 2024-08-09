@@ -1,9 +1,9 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { StoreState } from './store';
-import { EElement } from '../pages/Canvas/common';
+import { ISelectedMapObj } from '../pages/Canvas/common';
 
 export type ICommon = {
-  selectedMap: { [key: string]: EElement },
+  selectedMap: ISelectedMapObj,
   canvasPosition: number[],
   canvasScale: number,
 };

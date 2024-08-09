@@ -1,11 +1,9 @@
 import { useCallback, useEffect } from 'react';
-import { useShapes } from './useShapes';
-import { useConnections } from './useConnections';
+import { useElement } from './useElement';
 import { useCommon } from './useCommon';
 
 export const useDeleteElement = () => {
-  const { shapes, setShapes } = useShapes();
-  const { connections, setConnections } = useConnections();
+  const { shapes, setShapes, connections, setConnections } = useElement();
   const { selectedMap, setSelectedMap } = useCommon();
 
   const handleDelete = useCallback(() => {

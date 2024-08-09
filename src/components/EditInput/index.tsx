@@ -1,12 +1,12 @@
 import React, { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommon } from '../../hooks/useCommon';
-import { useShapes } from '../../hooks/useShapes';
+import { useElement } from '../../hooks/useElement';
 import { INPUT_OFFSET, isPointInShape, EElement } from '../../pages/Canvas/common';
 import { getCanvasEle } from '../../utils/util';
 import './index.less';
 interface IProps {}
 export const EditInput: React.FC<IProps> = props => {
-  const { shapes, updateShapeByIds } = useShapes();
+  const { shapes, updateShapeByIds } = useElement();
   const { canvasPosition, setSelectedMap, canvasScale } = useCommon();
   const [editingText, setEditingText] = useState<string>('');
   const [editingId, setEditingId] = useState<string>('');

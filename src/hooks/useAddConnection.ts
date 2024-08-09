@@ -1,12 +1,10 @@
 import { useCallback } from "react";
 import { getIntersectedConnectionPoint, COLOR_BORDER, IShapeConnectionPoint } from "../pages/Canvas/common";
 import { getCryptoUuid } from "../utils/util";
-import { useShapes } from "./useShapes";
-import { useConnections } from "./useConnections";
+import { useElement } from "./useElement";
 
 export const useAddConnection = () => {
-  const { shapes } = useShapes();
-  const { connections, setConnections } = useConnections();
+  const { shapes, connections, setConnections } = useElement();
   const handleAddConnection = useCallback((startConnectionPoint: IShapeConnectionPoint | null, offsetX: number, offsetY: number) => {
     const connectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
     if (connectionPoint && startConnectionPoint) {

@@ -1,16 +1,16 @@
 import { useCallback, useEffect } from 'react';
-import { HistoryManager } from '../pages/Canvas/common/HistoryManager';
-import { IConnection, IShape } from '../pages/Canvas/common';
-import { useShapes } from './useShapes';
-import { useConnections } from './useConnections';
+import { useElement } from './useElement';
 import { IHistoryState } from '../utils/type';
 import { historyManager } from '../utils/util';
 
 
 export const useHistory = () => {
-  const { shapes, setShapes } = useShapes();
-  const { connections, setConnections } = useConnections();
+  const { setConnections, setShapes } = useElement();
 
+  const pushHistory = useCallback(() => {
+
+  }, [])
+  
   const resetStates = useCallback((state: IHistoryState | null) => {
     if (state) {
       const { shapes: historyShapes, connections: historyConnections } = state;
@@ -28,13 +28,6 @@ export const useHistory = () => {
     const nextState = historyManager.redo();
     resetStates(nextState);
   }, [resetStates]);
-
-  // const historyPush = useCallback(() => {
-  //   historyManager.push({
-  //     shapes,
-  //     connections
-  //   })
-  // }, [connections, shapes]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

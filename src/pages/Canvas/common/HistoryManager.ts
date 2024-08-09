@@ -13,7 +13,7 @@ export class HistoryManager<T> {
 
     undo(): T | null {
         if (this.curIndex > 0) {
-            this.curIndex--;
+            this.curIndex--
             return this.stack[this.curIndex]
         }
         return null;
@@ -21,7 +21,7 @@ export class HistoryManager<T> {
 
     redo(): T | null {
         if (this.curIndex < this.stack.length - 1) {
-            this.curIndex++;
+            this.curIndex++
             return this.stack[this.curIndex];
         }
         return null;

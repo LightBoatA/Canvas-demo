@@ -12,12 +12,13 @@ import {
   IPoint,
   DEFAULT_POINT,
   EDirection,
-  getIntersectedInfo
+  getIntersectedInfo,
+  getSelectedShapes,
+  calcMultipleSelectRect
 } from './common/index';
 import { mapToObject, objectToMap } from '../../utils/util';
-import { useShapes } from '../../hooks/useShapes';
 import { useCommon } from '../../hooks/useCommon';
-import { useConnections } from '../../hooks/useConnections';
+import { useElement } from '../../hooks/useElement';
 import { useScale } from '../../hooks/useScale';
 import { useBoxSelection } from '../../hooks/useBoxSelection';
 import EditInput from '../../components/EditInput';
@@ -49,15 +50,13 @@ export const Canvas: React.FC<IProps> = props => {
   const [canvasStartOffset, setCanvasStartOffset] = useState<IPoint>(DEFAULT_POINT);
   // 是否按下空格键
   const [isSpaceKeyDown, setIsSpaceKeyDown] = useState<boolean>(false);
-  // 形状
-  const { shapes } = useShapes();
-  // 连线
-  const { connections } = useConnections();
+  // 形状及连线
+  const { shapes, connections } = useElement();
+  // 历史记录
+  useHistory();
   // 常用参数
   const { selectedMap, setSelectedMap, canvasPosition, updateCanvasPosition, canvasScale } = useCommon();
-  // 框选相关
-  const { setStartPosition, setCurPosition, updateSelectionBox, handleBoxSelection, boxStyles, selectedShapes, multipleSelectRect } =
-    useBoxSelection();
+
   // 缩放相关
   const { setResizeStartInfo, resizeShapes } = useResizeShape();
   // 鼠标悬停相关
@@ -71,13 +70,22 @@ export const Canvas: React.FC<IProps> = props => {
   // 形状拖放
   useDrop();
   // 移动相关
-  const { setMoveStartInfo, moveShapes } = useMoveShape(multipleSelectRect, setHelpLineVals);
+  const { handleMoveStart, handleMoveEnd, handleMoving, isMoving, localShapes } = useMoveShape(setHelpLineVals);
+  // 框选相关
+  const { handleBoxSelectStart, updateSelectionBox, handleBoxSelection, boxStyles } = useBoxSelection();
   // 连线虚线相关
   const { setStartConnectionPoint, preparedConnection, setPreparedConnection, startConnectionPoint, drawVirtualConnection } =
     useVirtualConnections(hoveringConnectionPoint);
   // 鼠标样式
-  useCursorStyle(mode, hoveringCtrlPoint, isSpaceKeyDown); 
+  useCursorStyle(mode, hoveringCtrlPoint, isSpaceKeyDown);
 
+  const multipleSelectRect = useMemo(() => {
+    const curShapes = isMoving ? localShapes : shapes;
+    const selectedShapes = getSelectedShapes(selectedMap, curShapes);
+    const realMap = objectToMap<string, EElement>(selectedMap); // 锚点
+    return calcMultipleSelectRect(realMap, connections, selectedShapes) || null;
+  }, [connections, isMoving, localShapes, selectedMap, shapes]);
+  
   useEffect(() => {
     if (canvasRef.current && !ctxRef.current) {
       ctxRef.current = canvasRef.current.getContext('2d');
@@ -95,27 +103,27 @@ export const Canvas: React.FC<IProps> = props => {
       if (e.key === ' ') {
         setIsSpaceKeyDown(true);
       }
-    }
+    };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === ' ') {
         setIsSpaceKeyDown(false);
       }
-    }
+    };
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-    }
-  }, [])
+    };
+  }, []);
 
   useEffect(() => {
     if (ctxRef.current) {
       clearCanvas();
       drawShape(
         ctxRef.current,
-        shapes,
+        isMoving ? localShapes : shapes, // 移动优化，移动过程中使用本地数据
         hoveringId,
         hoveringConnectionId,
         preparedConnection,
@@ -134,6 +142,8 @@ export const Canvas: React.FC<IProps> = props => {
     hoveringConnectionId,
     hoveringConnectionPoint,
     hoveringId,
+    isMoving,
+    localShapes,
     multipleSelectRect,
     preparedConnection,
     selectedMap,
@@ -179,7 +189,7 @@ export const Canvas: React.FC<IProps> = props => {
         setMode(EMouseMoveMode.RESIZE);
         setResizeStartInfo({
           oldBox: multipleSelectRect ? { ...multipleSelectRect } : null,
-          oldSelectedShapes: [...selectedShapes],
+          oldSelectedShapes: [...getSelectedShapes(selectedMap, shapes)],
           direction: hoveringCtrlPoint?.direction || EDirection.RIGHT_BOTTOM
         });
       } else if (intersectedShape || intersectConnectionId) {
@@ -197,6 +207,7 @@ export const Canvas: React.FC<IProps> = props => {
         } else {
           if (intersectedShape) {
             // 单选形状
+            const selectedShapes = getSelectedShapes(selectedMap, shapes);
             const isPointInSelectedShape = selectedShapes.find(shape => shape.id === intersectedShape?.id);
             let newSelectedShapes = selectedShapes;
 
@@ -207,7 +218,7 @@ export const Canvas: React.FC<IProps> = props => {
             }
             const newMouseMoveInfo = getMouseMoveInfo(newMap, connections, newSelectedShapes, offsetX, offsetY);
             setMode(EMouseMoveMode.MOVE);
-            setMoveStartInfo(newMouseMoveInfo);
+            handleMoveStart(newMouseMoveInfo);
           } else if (intersectConnectionId) {
             // 单选连线
             newMap = new Map([[intersectConnectionId, EElement.CONNECTION]]);
@@ -216,13 +227,25 @@ export const Canvas: React.FC<IProps> = props => {
         setSelectedMap(mapToObject<string, EElement>(newMap));
       } else {
         // 不与任何元素相交，框选
-        setStartPosition({ x: e.offsetX,  y: e.offsetY });
-        setCurPosition({ x: e.offsetX, y: e.offsetY });
+        handleBoxSelectStart({ x: e.offsetX, y: e.offsetY });
         setMode(EMouseMoveMode.BOX_SELECTION);
         setSelectedMap({});
       }
     },
-    [canvasScale, connections, hoveringCtrlPoint?.direction, isSpaceKeyDown, multipleSelectRect, selectedMap, selectedShapes, setCurPosition, setMoveStartInfo, setResizeStartInfo, setSelectedMap, setStartConnectionPoint, setStartPosition, shapes]
+    [
+      canvasScale,
+      isSpaceKeyDown,
+      shapes,
+      connections,
+      multipleSelectRect,
+      setStartConnectionPoint,
+      setResizeStartInfo,
+      selectedMap,
+      hoveringCtrlPoint?.direction,
+      setSelectedMap,
+      handleMoveStart,
+      handleBoxSelectStart
+    ]
   );
 
   const handleMouseMove = useCallback(
@@ -234,7 +257,7 @@ export const Canvas: React.FC<IProps> = props => {
 
       switch (mode) {
         case EMouseMoveMode.MOVE:
-          moveShapes(offsetX, offsetY);
+          handleMoving(offsetX, offsetY);
           break;
         case EMouseMoveMode.RESIZE:
           resizeShapes(offsetX, offsetY);
@@ -257,7 +280,7 @@ export const Canvas: React.FC<IProps> = props => {
       setHoveringElement,
       multipleSelectRect,
       mode,
-      moveShapes,
+      handleMoving,
       resizeShapes,
       drawVirtualConnection,
       updateSelectionBox,
@@ -280,10 +303,12 @@ export const Canvas: React.FC<IProps> = props => {
         handleBoxSelection();
       } else if (mode === EMouseMoveMode.CONNECT) {
         handleAddConnection(startConnectionPoint, offsetX, offsetY);
+      } else if (mode === EMouseMoveMode.MOVE) {
+        handleMoveEnd();
       }
       resetStates();
     },
-    [canvasScale, handleAddConnection, handleBoxSelection, mode, resetStates, startConnectionPoint]
+    [canvasScale, handleAddConnection, handleBoxSelection, handleMoveEnd, mode, resetStates, startConnectionPoint]
   );
 
   return useMemo(() => {

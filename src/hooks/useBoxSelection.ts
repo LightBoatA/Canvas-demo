@@ -4,13 +4,10 @@ import {
   DEFAULT_POINT,
   IBounds,
   findElementsInBox,
-  EElement,
-  calcMultipleSelectRect
-} from '../pages/Canvas/common';
-import { mapToObject, objectToMap } from '../utils/util';
+  EElement } from '../pages/Canvas/common';
+import { mapToObject } from '../utils/util';
 import { useCommon } from './useCommon';
-import { useShapes } from './useShapes';
-import { useConnections } from './useConnections';
+import { useElement } from './useElement';
 
 /**
  * 注意坐标转换：
@@ -19,9 +16,8 @@ import { useConnections } from './useConnections';
  * 相交判断时：真实坐标转换成画布坐标
  *  */
 export const useBoxSelection = () => {
-  const { selectedMap, setSelectedMap, canvasPosition, canvasScale } = useCommon();
-  const { shapes } = useShapes();
-  const { connections } = useConnections();
+  const { setSelectedMap, canvasPosition, canvasScale } = useCommon();
+  const { shapes, connections } = useElement();
   const [startPosition, setStartPosition] = useState<IPoint>(DEFAULT_POINT); // 框选起始点
   const [curPosition, setCurPosition] = useState<IPoint>(DEFAULT_POINT); // 框选当前点
   
@@ -60,24 +56,15 @@ export const useBoxSelection = () => {
     setCurPosition({ x: offsetX, y: offsetY });
   }, []);
 
-  const selectedShapes = useMemo(() => {
-    if (Object.keys(selectedMap).length <= 0) return [];
-    return shapes.filter(shape => selectedMap[shape.id]);
-  }, [selectedMap, shapes]);
-
-  const multipleSelectRect = useMemo(() => {
-    const realMap = objectToMap<string, EElement>(selectedMap); // 锚点
-    return calcMultipleSelectRect(realMap, connections, selectedShapes) || null;
-  }, [connections, selectedMap, selectedShapes]);
-
+  const handleBoxSelectStart = useCallback((startPoint: IPoint) => {
+    setStartPosition(startPoint);
+    setCurPosition(startPoint);
+  }, [])
 
   return {
-    setStartPosition,
-    setCurPosition,
+    handleBoxSelectStart,
     updateSelectionBox,
     handleBoxSelection,
     boxStyles,
-    selectedShapes,
-    multipleSelectRect
   }
 };

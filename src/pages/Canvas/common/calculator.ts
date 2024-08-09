@@ -2,7 +2,7 @@ import { connectionRouteCache } from '.';
 import { arrayDeduplication } from '../../../utils/util';
 import { EShape } from '../../Toolbar/common';
 import { CTRL_POINT_HALF_SIZE, DEFAULT_MOUSE_INFO, GRID_SIZE, HALF_LINE_WIDTH, SNAP_DISTANCE, STRING_CONNECTOR } from './constant';
-import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint, EElement, IRect, IBounds, IResizeStartInfo } from './types';
+import { IShape, ICtrlPoint, EDirection, IShapeConnectionPoint, IConnection, IConnectionPoint, EConnectPointDirection, IPoint, EElement, IRect, IBounds, IResizeStartInfo, IMoveStartInfo } from './types';
 import { getRectBounds } from './utils';
 
 /**
@@ -465,9 +465,10 @@ export const calcMouseMoveInfo = (curRect: IRect | null, selectedShapes: IShape[
       });
     });
     return {
+      rectInfo: { rectWidth: curRect.width, rectHeight: curRect.height },
       rectOffset,
       offsetMap
-    };
+    } as IMoveStartInfo;
   }
   return DEFAULT_MOUSE_INFO;
 };

@@ -145,6 +145,7 @@ export const INPUT_OFFSET = {
 }
 
 export const DEFAULT_MOUSE_INFO: IMoveStartInfo = {
+    rectInfo: { rectWidth: 0, rectHeight: 0 },
     rectOffset: { distanceX: 0, distanceY: 0 },
     offsetMap: new Map(),
 }

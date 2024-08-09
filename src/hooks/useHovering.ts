@@ -1,11 +1,9 @@
 import { useCallback, useState } from 'react';
 import { ICtrlPoint, IRect, IShapeConnectionPoint, getIntersectedConnectionPoint, getIntersectedControlPoint, isPointInLine, isPointInShape } from '../pages/Canvas/common';
-import { useShapes } from './useShapes';
-import { useConnections } from './useConnections';
+import { useElement } from './useElement';
 
 export const useHovering = () => {
-  const { shapes } = useShapes();
-  const { connections } = useConnections();
+  const { shapes, connections } = useElement();
   // 鼠标悬停在缩放控制点上
   const [hoveringCtrlPoint, setHoveringCtrlPoint] = useState<ICtrlPoint | null>(null);
   // 鼠标悬停在形状上

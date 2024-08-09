@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { EElement } from '../pages/Canvas/common';
+import { EElement, ISelectedMapObj } from '../pages/Canvas/common';
 import { commonActions, commonSelector } from '../redux/commonSlices';
 
 export const useCommon = () => {
@@ -7,7 +7,7 @@ export const useCommon = () => {
     const { selectedMap, canvasPosition, canvasScale } = commonState;
     const dispatch = useDispatch();
 
-    const setSelectedMap = (data: { [key: string]: EElement }) => {
+    const setSelectedMap = (data: ISelectedMapObj) => {
         dispatch(commonActions.setKeyValue({
             key: 'selectedMap',
             value: data

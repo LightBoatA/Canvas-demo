@@ -37,7 +37,7 @@ export const useBoxSelection = () => {
     };
   }, [canvasPosition, curPosition, startPosition]);
   
-  const handleBoxSelection = useCallback(() => {
+  const handleBoxSelectEnd = useCallback(() => {
     const { top, left, width, height } = boxStyles;
     // 减去舞台位置影响，才是相对于画布的真实坐标，再转换成画布坐标
     const newTop = (top - canvasPosition[1]) / canvasScale;
@@ -52,7 +52,7 @@ export const useBoxSelection = () => {
     setSelectedMap(mapToObject<string, EElement>(eleMap));
   }, [boxStyles, canvasPosition, canvasScale, connections, setSelectedMap, shapes]);
 
-  const updateSelectionBox = useCallback((offsetX: number, offsetY: number) => {
+  const handleBoxSelecting = useCallback((offsetX: number, offsetY: number) => {
     setCurPosition({ x: offsetX, y: offsetY });
   }, []);
 
@@ -63,8 +63,8 @@ export const useBoxSelection = () => {
 
   return {
     handleBoxSelectStart,
-    updateSelectionBox,
-    handleBoxSelection,
+    handleBoxSelecting,
+    handleBoxSelectEnd,
     boxStyles,
   }
 };

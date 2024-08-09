@@ -4,28 +4,31 @@ import { useElement } from './useElement';
 import { useCommon } from './useCommon';
 import { deepClone } from '../utils/util';
 
-export const useMoveShape = (setHelpLineVals: Dispatch<SetStateAction<IHelpLineData>>) => {
+export const useMoveShape = (
+  setHelpLineVals: Dispatch<SetStateAction<IHelpLineData>>,
+  localShapes: IShape[],
+  setLocalShapes: Dispatch<SetStateAction<IShape[]>>,
+  setIsFrequentlyUpdating: Dispatch<SetStateAction<boolean>>
+) => {
   const [moveStartInfo, setMoveStartInfo] = useState<IMoveStartInfo>(DEFAULT_MOUSE_INFO);
-  const [isMoving, setIsMoving] = useState<boolean>(false);
   const { shapes, setShapes } = useElement();
   const { selectedMap } = useCommon();
-  const [localShapes, setLocalShapes] = useState<IShape[]>([]);
 
   const handleMoveStart = useCallback(
     (info: IMoveStartInfo) => {
       setMoveStartInfo(info);
-      setIsMoving(true);
+      setIsFrequentlyUpdating(true);
       setLocalShapes(deepClone(shapes));
     },
-    [shapes]
+    [setIsFrequentlyUpdating, setLocalShapes, shapes]
   );
 
   const handleMoveEnd = useCallback(() => {
     setMoveStartInfo(DEFAULT_MOUSE_INFO);
-    setIsMoving(false);
+    setIsFrequentlyUpdating(false);
     setShapes(deepClone(localShapes));
     setLocalShapes([]);
-  }, [localShapes, setShapes]);
+  }, [localShapes, setIsFrequentlyUpdating, setLocalShapes, setShapes]);
 
   const selectedShapes = useMemo(() => {
     if (Object.keys(selectedMap).length <= 0) return [];
@@ -59,14 +62,12 @@ export const useMoveShape = (setHelpLineVals: Dispatch<SetStateAction<IHelpLineD
       });
       setLocalShapes(newShapes);
     },
-    [localShapes, moveStartInfo, selectedMap, selectedShapes, setHelpLineVals, shapes]
+    [localShapes, moveStartInfo, selectedMap, selectedShapes, setHelpLineVals, setLocalShapes, shapes]
   );
 
   return {
     handleMoving,
-    isMoving,
     handleMoveStart,
-    localShapes,
     handleMoveEnd
   };
 };

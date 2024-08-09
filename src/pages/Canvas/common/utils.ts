@@ -130,7 +130,7 @@ export const getMouseMoveInfo = (
  * @param offsetY
  * @returns
  */
-export const getIntersectedInfo = (
+export const getIntersectedInfo: any = (
   shapes: IShape[],
   connections: IConnection[],
   multipleSelectRect: IRect | null,
@@ -140,7 +140,7 @@ export const getIntersectedInfo = (
   // 与光标相交的连接点
   const intersectedConnectionPoint = getIntersectedConnectionPoint(shapes, offsetX, offsetY);
   // 与光标相交的形状
-  const intersectedShape = getIntersectedShape(shapes, offsetX, offsetY); // TODO: 这里一定要先计算出来吗？
+  const intersectedShape = getIntersectedShape(shapes, offsetX, offsetY);
   // 与光标相交的连接线
   const intersectConnectionId = getIntersectedConnectionId(offsetX, offsetY, connections);
   // 与光标相交的缩放控制点
@@ -154,6 +154,12 @@ export const getIntersectedInfo = (
   };
 };
 
+/**
+ * 获取选择的形状
+ * @param selectedMap 
+ * @param shapes 
+ * @returns 
+ */
 export const getSelectedShapes = (selectedMap: ISelectedMapObj, shapes: IShape[]) => {
   if (Object.keys(selectedMap).length <= 0) return [];
     return shapes.filter(shape => selectedMap[shape.id]);

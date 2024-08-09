@@ -8,7 +8,7 @@ export const useVirtualConnections = (hoveringConnectionPoint: IShapeConnectionP
   const [startConnectionPoint, setStartConnectionPoint] = useState<IShapeConnectionPoint | null>(null);
   const [preparedConnection, setPreparedConnection] = useState<IConnection | null>(null);
   
-  const drawVirtualConnection = useCallback(
+  const handleConnecting = useCallback(
     (offsetX: number, offsetY: number) => {
       // 从连接点到鼠标移动位置画虚线
       if (startConnectionPoint) {
@@ -39,12 +39,16 @@ export const useVirtualConnections = (hoveringConnectionPoint: IShapeConnectionP
     [hoveringConnectionPoint, startConnectionPoint]
   );
 
+  const handleConnectStart = useCallback((startPoint: IShapeConnectionPoint | null) => {
+    setStartConnectionPoint(startPoint)
+  }, [])
+
   return {
-    setStartConnectionPoint,
+    handleConnectStart,
     setPreparedConnection,
     preparedConnection,
     hoveringConnectionPoint,
     startConnectionPoint,
-    drawVirtualConnection
+    handleConnecting
   }
 }

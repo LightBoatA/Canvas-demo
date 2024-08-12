@@ -1,8 +1,39 @@
+@import '../../../src/assets/less/variable.less';
+
 .comp-center {
+    @topEditorHeight: 80px;
+    @leftToolbarWidth: 120px;
+
     display: flex;
     width: 100%;
-    .right-editor {
-        background-color: #eaecee;
+    height: calc(100vh);
+    position: relative;
+    .top-editor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        background-color: @editorBg;
+        border-bottom: 1px solid @borderColor;
+        height: @topEditorHeight;
         width: 100%;
+        z-index: 999;
+    }
+    .left-toolbar {
+        position: absolute;
+        left: 0;
+        top: @topEditorHeight;
+        border-right: 1px solid @borderColor;
+        height: calc(100vh - @topEditorHeight);
+        z-index: 888;
+        width: @leftToolbarWidth;
+        background-color: @editorBg;
+    }
+    .center-stage {
+        position: absolute;
+        left: @leftToolbarWidth;
+        top: @topEditorHeight;
+        height: calc(100vh - @topEditorHeight);
+        width: calc(100vw - @leftToolbarWidth);
+        background: cadetblue;
     }
 }

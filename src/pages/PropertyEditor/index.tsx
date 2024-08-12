@@ -9,10 +9,10 @@ import { EElement, IConnection, IShape } from '../Canvas/common';
 import { findValueObj } from '../../utils/util';
 
 interface IProps {
-  className?: string;
+  rootClassName?: string;
 }
 export const PropertyEditor: React.FC<IProps> = props => {
-  const { className } = props;
+  const { rootClassName } = props;
   const { shapes, updateShapeByIds, updateConnectionByIds } = useElement();
   const { selectedMap, canvasScale, updateCanvasScale } = useCommon();
   const presets = useMemo(() => {
@@ -36,12 +36,14 @@ export const PropertyEditor: React.FC<IProps> = props => {
     return null;
   }, [selectedMap, shapes]);
 
+  const isShow = useMemo(() => {
+    return Boolean(Object.keys(selectedMap).length);
+  }, [selectedMap]);
+
   return useMemo(() => {
     return (
-      <div className={`comp-property-editor ${className || ''}`}>
-        {!Object.keys(selectedMap).length && (
-          <div className="editor-mask"></div>
-        )}
+      <div className={`comp-property-editor ${rootClassName || ''}`}>
+        {/* {!Object.keys(selectedMap).length && <div className="editor-mask"></div>} */}
         <Space>
           <Select
             value={firstShape?.fontSize || 14}
@@ -53,6 +55,7 @@ export const PropertyEditor: React.FC<IProps> = props => {
               });
             }}
             options={FONT_SIZE_OPTIONS}
+            disabled={!isShow}
           />
           {colorBtns.map(item => {
             return (
@@ -75,8 +78,9 @@ export const PropertyEditor: React.FC<IProps> = props => {
                     data: value.toHexString()
                   });
                 }}
+                disabled={!isShow}
               >
-                <div className={`edit-icon-btn ${item.iconClass}`}></div>
+                <div className={`edit-icon-btn ${item.iconClass}`}>{!isShow && <div className="editor-mask"></div>}</div>
               </ColorPicker>
             );
           })}
@@ -86,20 +90,12 @@ export const PropertyEditor: React.FC<IProps> = props => {
               updateCanvasScale(value);
             }}
             options={CANVAS_SCALE_OPTIONS}
+            disabled={!isShow}
           />
         </Space>
       </div>
     );
-  }, [
-    canvasScale,
-    className,
-    firstShape?.fontSize,
-    presets,
-    selectedMap,
-    updateCanvasScale,
-    updateConnectionByIds,
-    updateShapeByIds
-  ]);
+  }, [canvasScale, firstShape?.fontSize, isShow, presets, rootClassName, selectedMap, updateCanvasScale, updateConnectionByIds, updateShapeByIds]);
 };
 
 export default PropertyEditor;

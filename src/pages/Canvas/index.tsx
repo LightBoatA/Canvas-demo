@@ -80,8 +80,7 @@ export const Canvas: React.FC<IProps> = props => {
   // 框选相关
   const { handleBoxSelectStart, handleBoxSelecting, handleBoxSelectEnd, boxStyles } = useBoxSelection();
   // 连线虚线相关
-  const { handleConnectStart, preparedConnection, setPreparedConnection, startConnectionPoint, handleConnecting } =
-    useVirtualConnections(hoveringConnectionPoint);
+  const { handleConnectStart, preparedConnection, setPreparedConnection, startConnectionPoint, handleConnecting } = useVirtualConnections(hoveringConnectionPoint);
   // 键盘按下
   const { isSpaceKeyDown } = useKeyDown();
   // 鼠标样式
@@ -283,18 +282,7 @@ export const Canvas: React.FC<IProps> = props => {
       startBoxSelectHandler(e.offsetX, e.offsetY);
       return;
     },
-    [
-      canvasScale,
-      isSpaceKeyDown,
-      shapes,
-      connections,
-      multipleSelectRect,
-      startMoveStageHandler,
-      startConnectHandler,
-      startResizeHandler,
-      selectElementHandler,
-      startBoxSelectHandler
-    ]
+    [canvasScale, isSpaceKeyDown, shapes, connections, multipleSelectRect, startMoveStageHandler, startConnectHandler, startResizeHandler, selectElementHandler, startBoxSelectHandler]
   );
 
   const handleMouseMove = useCallback(
@@ -361,9 +349,13 @@ export const Canvas: React.FC<IProps> = props => {
     [canvasScale, handleAddConnection, handleBoxSelectEnd, handleMoveEnd, handleResizeEnd, mode, resetStates, startConnectionPoint]
   );
 
+  const canvasBgHeight = useMemo(() => {
+    return CANVAS_HEITHT * canvasScale + canvasPosition[1] + 500;
+  }, [canvasPosition, canvasScale]);
+
   return useMemo(() => {
     return (
-      <div className={`comp-canvas ${className || ''}`}>
+      <div className={`comp-canvas ${className || ''}`} style={{ height: canvasBgHeight }}>
         <canvas
           onMouseDown={e => handleMouseDown(e.nativeEvent)}
           onMouseMove={e => handleMouseMove(e.nativeEvent)}
@@ -382,7 +374,7 @@ export const Canvas: React.FC<IProps> = props => {
         <ContextMenu menus={[{ label: '删除', key: 'Delete', handle: handleDelete }]} />
       </div>
     );
-  }, [boxStyles, canvasPosition, canvasScale, className, handleDelete, handleMouseDown, handleMouseMove, handleMouseUp, mode]);
+  }, [boxStyles, canvasBgHeight, canvasPosition, canvasScale, className, handleDelete, handleMouseDown, handleMouseMove, handleMouseUp, mode]);
 };
 
 export default Canvas;

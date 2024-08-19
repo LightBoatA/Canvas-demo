@@ -6,11 +6,13 @@ export const useKeyDown = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === ' ') {
+        e.preventDefault();
         setIsSpaceKeyDown(true);
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === ' ') {
+        e.preventDefault();
         setIsSpaceKeyDown(false);
       }
     };

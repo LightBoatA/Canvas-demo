@@ -1,7 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import numberReducer, { INumber } from "./numberSlice";
 import shapesReducer, { IShapes } from './shapesSlice';
-import { IShape } from '../pages/Canvas/common';
 import commonReducer from './commonSlices';
 import { ICommon } from './commonSlices';
 import connectionsReducer, { IConnections } from './connectionsSlice';

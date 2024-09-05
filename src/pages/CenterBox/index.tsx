@@ -10,6 +10,7 @@ export const CenterBox: React.FC<IProps> = props => {
     return (
       <div className="comp-center">
         <div className="top-editor">
+          <a className='logo' target='_blank' href='https://github.com/LightBoatA?tab=repositories'></a>
           <PropertyEditor />
         </div>
         <div className="left-toolbar">

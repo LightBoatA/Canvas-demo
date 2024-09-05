@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { green, red, blue, grey } from '@ant-design/colors';
-import { ColorPicker, Select, Space } from 'antd';
+import { ColorPicker, InputNumber, Select, Space } from 'antd';
 import './index.less';
 import { CANVAS_SCALE_OPTIONS, FONT_SIZE_OPTIONS, colorBtns } from './common';
 import { useElement } from '../../hooks/useElement';
 import { useCommon } from '../../hooks/useCommon';
-import { EElement, IConnection, IShape } from '../Canvas/common';
+import { EElement, IConnection, IShape, MAX_SCALE, MIN_SCALE } from '../Canvas/common';
 import { findValueObj } from '../../utils/util';
 
 interface IProps {
@@ -84,13 +84,16 @@ export const PropertyEditor: React.FC<IProps> = props => {
               </ColorPicker>
             );
           })}
-          <Select
+          <InputNumber
+            min={MIN_SCALE}
+            max={MAX_SCALE}
+            step={0.1}
             value={canvasScale}
-            onChange={value => {
-              updateCanvasScale(value);
+            formatter={(value) => `${((value || 1) * 100).toFixed(0)}%`}
+            parser={value => (value?.replace('%', '') as unknown as number) / 100 }
+            onChange={data => {
+              data && updateCanvasScale(data);
             }}
-            options={CANVAS_SCALE_OPTIONS}
-            disabled={!isShow}
           />
         </Space>
       </div>

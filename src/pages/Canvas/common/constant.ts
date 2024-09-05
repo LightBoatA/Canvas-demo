@@ -14,7 +14,7 @@ export const SNAP_DISTANCE = 3; // 吸附阈值
 export const STRING_CONNECTOR = ':'; // 两个字符串组合的连接符，连接两个ID等
 export const HALF_LINE_WIDTH = 5; // 连线粗细的一半
 
-export const MIN_SCALE = 0.125;
+export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 4;
 
 export const COLOR_CONNECT_POINT = "#FF6969";

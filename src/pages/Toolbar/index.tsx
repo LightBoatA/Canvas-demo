@@ -16,7 +16,7 @@ export const Toolbar: React.FC<IProps> = props => {
         return (
             <div className={`comp-toolbar ${rootClassName || ''}`}>
                 <div className="title">
-                    形状库
+                    Shapes
                 </div>
                 {
                     DRAG_SHAPES.map(shape => {

@@ -61,13 +61,13 @@ export const EditInput: React.FC<IProps> = props => {
     if (editingShape) {
       const { x, y, width, height, fontSize, text } = editingShape;
       console.log(editingShape);
-
       style = {
-        left: (x  - width / 2) * canvasScale  + canvasPosition[0],
+        left: (x - width / 2) * canvasScale + canvasPosition[0],
         top: (y - height / 2) * canvasScale + canvasPosition[1],
         width: `${width * canvasScale}px`,
-        height: `${height * canvasScale}px`,
-        fontSize: fontSize * canvasScale,
+        // height: `${height * canvasScale}px`,
+        height: `auto`,
+        fontSize: fontSize * canvasScale
       };
     }
     return style;
@@ -87,18 +87,9 @@ export const EditInput: React.FC<IProps> = props => {
     return (
       <>
         {editingId && (
-          <div 
-          className="input-text-wrap"
-            style={inputStyle}
-          >
-            <textarea
-              className="input-text"
-              id="editing-input-box"
-              ref={inputRef}
-              value={editingText}
-              onChange={handleTextChange}
-              onBlur={handleTextSubmit}
-            />
+          <div className="input-text-wrap" style={inputStyle}>
+            {/* <input type='text' className="input-text" id="editing-input-box" ref={inputRef} value={editingText} onChange={handleTextChange} onBlur={handleTextSubmit} /> */}
+            <textarea className="input-text" id="editing-input-box" ref={inputRef} value={editingText} onChange={handleTextChange} onBlur={handleTextSubmit} />
           </div>
         )}
       </>

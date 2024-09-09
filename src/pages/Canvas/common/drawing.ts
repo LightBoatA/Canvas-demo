@@ -8,14 +8,14 @@ import {
   CTRL_POINT_HALF_SIZE,
   COLOR_GRID,
   COLOR_BORDER,
-  COLOR_SHAPE,
   CONNECT_POINT_RADIUS,
   COLOR_DASHLINE,
   COLOR_CONNECTION,
   COLOR_BORDER_HOVER,
   COLOR_SELECTED_COLOR,
   COLOR_CTRL_POINT,
-  COLOR_GRID_DARK
+  COLOR_GRID_DARK,
+  ARROW_LENGTH
 } from './constant';
 import { IShape, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, IRect } from './types';
 
@@ -74,7 +74,6 @@ const drawControlPoints = (ctx: CanvasRenderingContext2D, rect: IRect) => {
   });
 };
 
-const drawRotationIcon = (ctx: CanvasRenderingContext2DSettings, rect: IRect) => {};
 
 /**
  * 绘制连接点
@@ -83,10 +82,6 @@ const drawRotationIcon = (ctx: CanvasRenderingContext2DSettings, rect: IRect) =>
  */
 const drawConnectPoints = (ctx: CanvasRenderingContext2D, shape: IShape, hovingConnectionPoint: IShapeConnectionPoint | null) => {
   const { connectionPoints } = shape;
-  // const { id: shapeId } = hovingConnectionPoint.shape;
-  // const { direction: pointDirection } = hovingConnectionPoint.point;
-  // const [shapeId, pointDirection] = connectionPointInfo.split(STRING_CONNECTOR);
-  // ctx.strokeStyle = COLOR_BORDER;
   ctx.fillStyle = '#FFF';
   ctx.lineWidth = 1;
   connectionPoints.forEach(point => {
@@ -102,17 +97,17 @@ const drawConnectPoints = (ctx: CanvasRenderingContext2D, shape: IShape, hovingC
   // }
 };
 
-/**
- * 绘制选中边框
- * @param ctx
- * @param shape
- */
-const drawSelectedBorder = (ctx: CanvasRenderingContext2D, shape: IShape) => {
-  const { x, y, width, height } = shape;
-  ctx.strokeStyle = COLOR_BORDER;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-};
+// /**
+//  * 绘制选中边框
+//  * @param ctx
+//  * @param shape
+//  */
+// const drawSelectedBorder = (ctx: CanvasRenderingContext2D, shape: IShape) => {
+//   const { x, y, width, height } = shape;
+//   ctx.strokeStyle = COLOR_BORDER;
+//   ctx.lineWidth = 2;
+//   ctx.strokeRect(x - width / 2, y - height / 2, width, height);
+// };
 
 // /**
 //  * 绘制选中边框、缩放控制点等控制类图形
@@ -149,50 +144,72 @@ const drawHoveringShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
 //     ctx.stroke();
 // }
 
+// /**
+//  * 用于测试连线路由选择辅助点绘制
+//  * @param ctx
+//  * @param points
+//  * @param startPoint
+//  * @param endPoint
+//  * @param fakeStartPoint
+//  * @param fakeEndPoint
+//  */
+// const drawTestHelpPoint = (ctx: CanvasRenderingContext2D, points: number[][], startPoint: number[], endPoint: number[], fakeStartPoint: number[], fakeEndPoint: number[]) => {
+//   points.forEach((point: number[]) => {
+//     const [x, y] = point;
+//     ctx.beginPath();
+//     ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
+//     ctx.fill();
+//   });
+
+//   ctx.fillStyle = 'black';
+//   const [x3, y3] = startPoint;
+//   ctx.beginPath();
+//   ctx.arc(x3, y3, 4, 0, 2 * Math.PI, false);
+//   ctx.fill();
+
+//   ctx.fillStyle = 'black';
+//   const [x4, y4] = startPoint;
+//   ctx.beginPath();
+//   ctx.arc(x4, y4, 4, 0, 2 * Math.PI, false);
+//   ctx.fill();
+
+//   ctx.fillStyle = 'red';
+//   const [x, y] = fakeStartPoint;
+//   ctx.beginPath();
+//   ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
+//   ctx.fill();
+
+//   ctx.fillStyle = 'red';
+//   const [x1, y1] = fakeEndPoint;
+//   ctx.beginPath();
+//   ctx.arc(x1, y1, 4, 0, 2 * Math.PI, false);
+//   ctx.fill();
+
+//   ctx.fillStyle = COLOR_SHAPE;
+// };
 /**
- * 用于测试连线路由选择辅助点绘制
- * @param ctx
- * @param points
- * @param startPoint
- * @param endPoint
- * @param fakeStartPoint
- * @param fakeEndPoint
+ * 绘制连线末端的箭头
+ * @param ctx 
+ * @param x1 
+ * @param y1 
+ * @param x2 
+ * @param y2 
+ * @param fillColor 
  */
-const drawTestHelpPoint = (ctx: CanvasRenderingContext2D, points: number[][], startPoint: number[], endPoint: number[], fakeStartPoint: number[], fakeEndPoint: number[]) => {
-  points.forEach((point: number[]) => {
-    const [x, y] = point;
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
-    ctx.fill();
-  });
-
-  ctx.fillStyle = 'black';
-  const [x3, y3] = startPoint;
+const drawLineArrow = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, fillColor: string) => {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const arrowX1 = x2 - ARROW_LENGTH * Math.cos(angle - Math.PI / 6);
+  const arrowY1 = y2 - ARROW_LENGTH * Math.sin(angle - Math.PI / 6);
+  const arrowX2 = x2 - ARROW_LENGTH * Math.cos(angle + Math.PI / 6);
+  const arrowY2 = y2 - ARROW_LENGTH * Math.sin(angle + Math.PI / 6);
   ctx.beginPath();
-  ctx.arc(x3, y3, 4, 0, 2 * Math.PI, false);
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(arrowX1, arrowY1);
+  ctx.lineTo(arrowX2, arrowY2);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
   ctx.fill();
-
-  ctx.fillStyle = 'black';
-  const [x4, y4] = startPoint;
-  ctx.beginPath();
-  ctx.arc(x4, y4, 4, 0, 2 * Math.PI, false);
-  ctx.fill();
-
-  ctx.fillStyle = 'red';
-  const [x, y] = fakeStartPoint;
-  ctx.beginPath();
-  ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
-  ctx.fill();
-
-  ctx.fillStyle = 'red';
-  const [x1, y1] = fakeEndPoint;
-  ctx.beginPath();
-  ctx.arc(x1, y1, 4, 0, 2 * Math.PI, false);
-  ctx.fill();
-
-  ctx.fillStyle = COLOR_SHAPE;
-};
-
+}
 /**
  * 根据坐标点数组绘制折线
  * @param ctx
@@ -207,10 +224,20 @@ const drawPolyLine = (ctx: CanvasRenderingContext2D, routes: number[][], lineDas
   ctx.setLineDash(lineDashSegments);
   ctx.beginPath();
   ctx.moveTo(routes[0][0], routes[0][1]);
+  
   routes.forEach(route => {
     ctx.lineTo(route[0], route[1]);
   });
+
   ctx.stroke();
+  // 绘制末尾箭头
+  // 最后一段：
+  const length = routes.length;
+  if (routes[length - 1] && routes[length - 2]) {
+    const lastPoint = routes[length - 1];
+    const secondLastPoint = routes[length - 2];
+    drawLineArrow(ctx, secondLastPoint[0], secondLastPoint[1], lastPoint[0], lastPoint[1], strokeStyle);
+  }
   ctx.setLineDash([]);
 };
 
@@ -322,9 +349,7 @@ const drawText = (ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 export const drawShape = (
   ctx: CanvasRenderingContext2D | null,
   shapes: IShape[],
-  // selectedId: string, // 选中的形状ID
   hoveringId: string, // 鼠标悬停的形状ID
-  // selectedConnectionId: string, // 选中的连接线ID
   hoveringConnectionId: string, // 鼠标悬停的连接线ID
   preparedConnection: IConnection | null, // 鼠标拖拽的连线虚线
   connections: IConnection[], // 连线

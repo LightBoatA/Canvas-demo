@@ -2,18 +2,18 @@ import { COLOR_BORDER, COLOR_BORDER_HOVER, CONNECT_POINT_RADIUS, IConnectionPoin
 
 export abstract class Shape {
   constructor(
-    public id: string,
-    public x: number,
-    public y: number,
-    public width: number,
-    public height: number,
-    public fillColor: string,
-    public strokeColor: string,
-    public lineWidth: number,
-    public text: string,
-    public fontColor: string,
-    public fontSize: number,
-    public connectionPoints: IConnectionPoint[]
+    public readonly id: string,
+    protected readonly x: number,
+    protected readonly y: number,
+    protected readonly width: number,
+    protected readonly height: number,
+    protected readonly fillColor: string,
+    protected readonly strokeColor: string,
+    protected readonly lineWidth: number,
+    protected readonly text: string,
+    protected readonly fontColor: string,
+    protected readonly fontSize: number,
+    protected readonly connectionPoints: IConnectionPoint[]
   ) {}
 
   abstract draw(ctx: CanvasRenderingContext2D): void;
@@ -63,13 +63,13 @@ export abstract class Shape {
     }
   }
 
-  _drawHoveringShape = (ctx: CanvasRenderingContext2D) => {
+  protected drawHoveringShape = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = COLOR_BORDER;
     ctx.lineWidth = 1;
     ctx.strokeRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
   };
 
-  _drawConnectPoints = (ctx: CanvasRenderingContext2D, hovingConnectionPoint: IShapeConnectionPoint | null) => {
+  protected drawConnectPoints = (ctx: CanvasRenderingContext2D, hovingConnectionPoint: IShapeConnectionPoint | null) => {
     ctx.fillStyle = '#FFF';
     ctx.lineWidth = 1;
     this.connectionPoints.forEach(point => {
@@ -84,8 +84,8 @@ export abstract class Shape {
     });
   };
 
-  drawHoverEffect(ctx: CanvasRenderingContext2D, hovingConnectionPoint: IShapeConnectionPoint | null) {
-    this._drawHoveringShape(ctx);
-    this._drawConnectPoints(ctx, hovingConnectionPoint);
+  public drawHoverEffect(ctx: CanvasRenderingContext2D, hovingConnectionPoint: IShapeConnectionPoint | null) {
+    this.drawHoveringShape(ctx);
+    this.drawConnectPoints(ctx, hovingConnectionPoint);
   }
 }

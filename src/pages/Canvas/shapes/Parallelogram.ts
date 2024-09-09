@@ -2,7 +2,7 @@ import { IConnectionPoint } from "../common";
 import { Shape } from "./Shape";
 
 export class Parallelogram extends Shape {
-  public tangentAlpha: number;
+  private readonly tangentAlpha: number;
 
   constructor(
     id: string,

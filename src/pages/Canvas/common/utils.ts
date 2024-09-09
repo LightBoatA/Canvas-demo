@@ -1,16 +1,14 @@
 import { getCryptoUuid } from '../../../utils/util';
 import { EShape } from '../../Toolbar/common';
-import {
-  calcMouseMoveInfo,
-  calcMultipleSelectRect,
-  getConnectionPointVal,
-  getIntersectedConnectionPoint,
-  getIntersectedControlPoint,
-  isPointInLine,
-  isPointInShape
-} from './calculator';
-import { COMMON_SHAPE_SIZE, INIT_SHAPES, STRING_CONNECTOR } from './constant';
-import { EConnectPointDirection, EDirection, EElement, IBounds, IConnection, IConnectionPoint, IRect, ISelectedMapObj, IShape, IShapeData } from './types';
+import { Circle } from '../shapes/Circle';
+import { Diamond } from '../shapes/Diamond';
+import { Parallelogram } from '../shapes/Parallelogram';
+import { Rectangle } from '../shapes/Rectangle';
+import { RoundedRect } from '../shapes/RoundedRect';
+import { Shape } from '../shapes/Shape';
+import { calcMouseMoveInfo, calcMultipleSelectRect, getConnectionPointVal, isPointInLine, isPointInShape } from './calculator';
+import { INIT_SHAPES } from './constant';
+import { EConnectPointDirection, EElement, IBounds, IConnection, IConnectionPoint, IRect, ISelectedMapObj, IShape } from './types';
 
 /**
  * 获取形状的边界坐标值
@@ -109,13 +107,7 @@ export const getIntersectedConnectionId = (pointX: number, pointY: number, conne
  * @param offsetY
  * @returns
  */
-export const getMouseMoveInfo = (
-  selectedMap: Map<string, EElement>,
-  connections: IConnection[],
-  selectedShapes: IShape[],
-  offsetX: number,
-  offsetY: number
-) => {
+export const getMouseMoveInfo = (selectedMap: Map<string, EElement>, connections: IConnection[], selectedShapes: IShape[], offsetX: number, offsetY: number) => {
   const newSelectRect = calcMultipleSelectRect(selectedMap, connections, selectedShapes);
   const newMouseMoveInfo = calcMouseMoveInfo(newSelectRect, selectedShapes, offsetX, offsetY);
   return newMouseMoveInfo;
@@ -123,11 +115,29 @@ export const getMouseMoveInfo = (
 
 /**
  * 获取选择的形状
- * @param selectedMap 
- * @param shapes 
- * @returns 
+ * @param selectedMap
+ * @param shapes
+ * @returns
  */
 export const getSelectedShapes = (selectedMap: ISelectedMapObj, shapes: IShape[]) => {
   if (Object.keys(selectedMap).length <= 0) return [];
-    return shapes.filter(shape => selectedMap[shape.id]);
-}
+  return shapes.filter(shape => selectedMap[shape.id]);
+};
+
+export const createShpaeInstance = (shapeData: IShape): Shape => {
+  const { id, x, y, width, height, fillColor, strokeColor, lineWidth, tangentAlpha, text, fontColor, fontSize, connectionPoints } = shapeData;
+  switch (shapeData.type) {
+    case EShape.RECT:
+      return new Rectangle(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+    case EShape.CIRCLE:
+      return new Circle(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+    case EShape.DIAMOND:
+      return new Diamond(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+    case EShape.ROUNDED_RECT:
+      return new RoundedRect(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+    case EShape.PARALLELOGRAM:
+      return new Parallelogram(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints, tangentAlpha || 1);
+    default:
+      throw new Error('Unknown shape type');
+  }
+};

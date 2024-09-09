@@ -49,7 +49,7 @@ export interface IConnectionPoint extends IPoint {
 export interface IShape {
     id: string;
     type: EShape;
-    data: IShapeData;
+    // data: IShapeData;
     x: number; // 中心点
     y: number;
     width: number;
@@ -61,6 +61,7 @@ export interface IShape {
     fontColor: string;
     fontSize: number;
     lineWidth: number;
+    tangentAlpha?: number;
 }
 
 export interface IRect {
@@ -90,19 +91,19 @@ export interface IConnection {
     strokeColor: string;
 }
 
-export type IShapeData = IRectData | ICircleData | IParallelogramData;
+// export type IShapeData = IRectData | ICircleData | IParallelogramData;
 
-export interface IRectData {
+// export interface IRectData {
 
-}
+// }
 
-export interface ICircleData {
+// export interface ICircleData {
 
-}
+// }
 
-export interface IParallelogramData {
-    tangentAlpha: number;
-}
+// export interface IParallelogramData {
+//     tangentAlpha: number;
+// }
 
 // 缩放控制点方向
 export enum EDirection {

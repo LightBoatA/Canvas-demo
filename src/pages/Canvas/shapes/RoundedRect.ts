@@ -1,10 +1,11 @@
 import { Shape } from "./Shape";
 
-export class Circle extends Shape {
+export class RoundedRect extends Shape {
   draw(ctx: CanvasRenderingContext2D): void {
     this.setStyles(ctx);
     ctx.beginPath();
-    ctx.ellipse(this.x, this.y, this.width / 2, this.height / 2, 0, 0, 2 * Math.PI);
+    ctx.roundRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height, this.height / 2);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
     this.drawText(ctx);

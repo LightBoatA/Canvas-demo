@@ -286,7 +286,6 @@ export const getVirtualEndPoint = (offsetX: number, offsetY: number, startX: num
   const shape: IShape = {
     id: '',
     type: EShape.RECT,
-    data: {},
     x: offsetX,
     y: offsetY,
     width: 2,

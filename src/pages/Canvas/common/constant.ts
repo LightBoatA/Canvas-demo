@@ -63,7 +63,6 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         text: "",
         width: INIT_SHAPE_WIDTH,
         height: INIT_SHAPE_WIDTH / 2,
-        data: {},
         connectionPoints: [],
         strokeColor: COLOR_BORDER,
         fillColor: COLOR_SHAPE,
@@ -77,7 +76,6 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         x: 0,
         y: 0,
         text: "",
-        data: {},
         width: INIT_SHAPE_WIDTH,
         height: INIT_SHAPE_WIDTH,
         connectionPoints: [],
@@ -93,7 +91,6 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         x: 0,
         y: 0,
         text: "",
-        data: {},
         width: INIT_SHAPE_WIDTH + 32,
         height: 64,
         connectionPoints: [],
@@ -109,9 +106,6 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         x: 0,
         y: 0,
         text: "",
-        data: {
-            
-        },
         width: INIT_SHAPE_WIDTH,
         height: INIT_SHAPE_WIDTH / 2,
         connectionPoints: [],
@@ -127,9 +121,6 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         x: 0,
         y: 0,
         text: "",
-        data: {
-            tangentAlpha: 0.6, // 平行四边形两边的三角，高/alpha角的对边 
-        },
         width: INIT_SHAPE_WIDTH + 32,
         height: INIT_SHAPE_WIDTH / 2,
         connectionPoints: [],
@@ -138,6 +129,7 @@ export const INIT_SHAPES: { [ key: string]: IShape } = {
         fontColor: FONT_COLOR,
         fontSize: 14,
         lineWidth: 2,
+        tangentAlpha: 0.6, // 平行四边形两边的三角，高/alpha角的对边 
     }
 }
 // 文字输入框相对于形状中心坐标的偏移值

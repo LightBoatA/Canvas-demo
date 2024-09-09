@@ -17,7 +17,8 @@ import {
   COLOR_GRID_DARK,
   ARROW_LENGTH
 } from './constant';
-import { IShape, IConnection, IShapeConnectionPoint, IHelpLineData, IParallelogramData, IRect } from './types';
+import { IShape, IConnection, IShapeConnectionPoint, IHelpLineData, IRect } from './types';
+import { createShpaeInstance } from './utils';
 
 // 连线id与连线路由点对应关系
 export let connectionRouteCache: { [key: string]: number[][] } = {};
@@ -73,7 +74,6 @@ const drawControlPoints = (ctx: CanvasRenderingContext2D, rect: IRect) => {
     ctx.fillRect(point.x, point.y, halfSize * 2, halfSize * 2);
   });
 };
-
 
 /**
  * 绘制连接点
@@ -189,12 +189,12 @@ const drawHoveringShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
 // };
 /**
  * 绘制连线末端的箭头
- * @param ctx 
- * @param x1 
- * @param y1 
- * @param x2 
- * @param y2 
- * @param fillColor 
+ * @param ctx
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param fillColor
  */
 const drawLineArrow = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, fillColor: string) => {
   const angle = Math.atan2(y2 - y1, x2 - x1);
@@ -209,7 +209,7 @@ const drawLineArrow = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2
   ctx.closePath();
   ctx.fillStyle = fillColor;
   ctx.fill();
-}
+};
 /**
  * 根据坐标点数组绘制折线
  * @param ctx
@@ -224,7 +224,7 @@ const drawPolyLine = (ctx: CanvasRenderingContext2D, routes: number[][], lineDas
   ctx.setLineDash(lineDashSegments);
   ctx.beginPath();
   ctx.moveTo(routes[0][0], routes[0][1]);
-  
+
   routes.forEach(route => {
     ctx.lineTo(route[0], route[1]);
   });
@@ -340,6 +340,7 @@ const drawText = (ctx: CanvasRenderingContext2D, text: string, x: number, y: num
     ctx.fillText(lines[i], startX, startY + i * lineHeight);
   }
 };
+
 /**
  * 根据图形数据分类绘制图形，并对选中图形进行描边
  * @param ctx
@@ -362,69 +363,27 @@ export const drawShape = (
     ctx.resetTransform();
     ctx.scale(scale, scale);
     drawGrid(ctx);
-    // 绘制形状及形状附属图形
-    shapes.forEach(shape => {
-      const { x, y, text, width, height, data, fillColor, strokeColor, lineWidth, fontColor, fontSize } = shape;
-      ctx.fillStyle = fillColor;
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = lineWidth;
-      // 绘制形状
-      if (shape.type === EShape.RECT) {
-        ctx.fillRect(x - width / 2, y - height / 2, width, height);
-        ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-      } else if (shape.type === EShape.CIRCLE) {
-        ctx.beginPath();
-        ctx.ellipse(x, y, width / 2, height / 2, 0, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.stroke();
-      } else if (shape.type === EShape.DIAMOND) {
-        ctx.beginPath();
-        ctx.moveTo(x, y - height / 2); // 上方顶点
-        ctx.lineTo(x + width / 2, y);
-        ctx.lineTo(x, y + height / 2);
-        ctx.lineTo(x - width / 2, y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      } else if (shape.type === EShape.ROUNDED_RECT) {
-        ctx.beginPath();
-        ctx.roundRect(x - width / 2, y - height / 2, width, height, height / 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      } else if (shape.type === EShape.PARALLELOGRAM) {
-        const rectangleEdge = (data as IParallelogramData).tangentAlpha * height;
-        const halfRectEdge = width / 2 - rectangleEdge;
-        ctx.beginPath();
-        ctx.moveTo(x - halfRectEdge, y - height / 2);
-        ctx.lineTo(x + width / 2, y - height / 2);
-        ctx.lineTo(x + halfRectEdge, y + height / 2);
-        ctx.lineTo(x - width / 2, y + height / 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-      // 绘制连接点虚线
-      if (preparedConnection) {
-        drawDashLine(ctx, preparedConnection);
-      }
-      // 绘制连接线
-      if (connections && connections.length) {
-        drawConnections(ctx, shapes, connections, hoveringConnectionId);
-      }
-      // 绘制鼠标悬停到图形上的效果
-      if (hoveringId === shape.id) {
-        drawHoveringShape(ctx, shape);
-        drawConnectPoints(ctx, shape, hoveringConnectionPoint);
-      }
 
-      // 绘制文字
-      if (text) {
-        drawText(ctx, text, x, y, width, fontSize, fontSize + 5, fontColor);
+    const shapeInstances = shapes.map(createShpaeInstance);
+    shapeInstances.forEach(shapeInstance => {
+      shapeInstance.draw(ctx);
+
+      if (hoveringId === shapeInstance.id) {
+        shapeInstance.drawHoverEffect(ctx, hoveringConnectionPoint)
       }
-      // 绘制辅助线
-      drawHelpLines(ctx, helpLines);
     });
+
+    // 绘制辅助线
+    drawHelpLines(ctx, helpLines);
+
+    // 绘制连接点虚线
+    if (preparedConnection) {
+      drawDashLine(ctx, preparedConnection);
+    }
+    // 绘制连接线
+    if (connections && connections.length) {
+      drawConnections(ctx, shapes, connections, hoveringConnectionId);
+    }
     // 绘制多选框
     if (multipleSelectRect) {
       const { x, y, width, height } = multipleSelectRect;
@@ -434,3 +393,99 @@ export const drawShape = (
     }
   }
 };
+
+// /**
+//  * 根据图形数据分类绘制图形，并对选中图形进行描边
+//  * @param ctx
+//  * @param shapes
+//  * @param selectedId
+//  */
+// export const drawShapeOld = (
+//   ctx: CanvasRenderingContext2D | null,
+//   shapes: IShape[],
+//   hoveringId: string, // 鼠标悬停的形状ID
+//   hoveringConnectionId: string, // 鼠标悬停的连接线ID
+//   preparedConnection: IConnection | null, // 鼠标拖拽的连线虚线
+//   connections: IConnection[], // 连线
+//   hoveringConnectionPoint: IShapeConnectionPoint | null, // shapeId-connectionPointDirection
+//   helpLines: IHelpLineData, // 辅助对齐线
+//   multipleSelectRect: IRect | null, //选中的元素
+//   scale: number
+// ) => {
+//   if (ctx) {
+//     ctx.resetTransform();
+//     ctx.scale(scale, scale);
+//     drawGrid(ctx);
+//     // 绘制形状及形状附属图形
+//     shapes.forEach(shape => {
+//       const { x, y, text, width, height, fillColor, strokeColor, lineWidth, fontColor, fontSize, tangentAlpha = 1 } = shape;
+//       ctx.fillStyle = fillColor;
+//       ctx.strokeStyle = strokeColor;
+//       ctx.lineWidth = lineWidth;
+//       // 绘制形状
+//       if (shape.type === EShape.RECT) {
+//         ctx.fillRect(x - width / 2, y - height / 2, width, height);
+//         ctx.strokeRect(x - width / 2, y - height / 2, width, height);
+//       } else if (shape.type === EShape.CIRCLE) {
+//         ctx.beginPath();
+//         ctx.ellipse(x, y, width / 2, height / 2, 0, 0, 2 * Math.PI);
+//         ctx.fill();
+//         ctx.stroke();
+//       } else if (shape.type === EShape.DIAMOND) {
+//         ctx.beginPath();
+//         ctx.moveTo(x, y - height / 2); // 上方顶点
+//         ctx.lineTo(x + width / 2, y);
+//         ctx.lineTo(x, y + height / 2);
+//         ctx.lineTo(x - width / 2, y);
+//         ctx.closePath();
+//         ctx.fill();
+//         ctx.stroke();
+//       } else if (shape.type === EShape.ROUNDED_RECT) {
+//         ctx.beginPath();
+//         ctx.roundRect(x - width / 2, y - height / 2, width, height, height / 2);
+//         ctx.closePath();
+//         ctx.fill();
+//         ctx.stroke();
+//       } else if (shape.type === EShape.PARALLELOGRAM) {
+//         const rectangleEdge = tangentAlpha * height;
+//         const halfRectEdge = width / 2 - rectangleEdge;
+//         ctx.beginPath();
+//         ctx.moveTo(x - halfRectEdge, y - height / 2);
+//         ctx.lineTo(x + width / 2, y - height / 2);
+//         ctx.lineTo(x + halfRectEdge, y + height / 2);
+//         ctx.lineTo(x - width / 2, y + height / 2);
+//         ctx.closePath();
+//         ctx.fill();
+//         ctx.stroke();
+//       }
+
+//       // 绘制鼠标悬停到图形上的效果
+//       if (hoveringId === shape.id) {
+//         drawHoveringShape(ctx, shape);
+//         drawConnectPoints(ctx, shape, hoveringConnectionPoint);
+//       }
+
+//       // 绘制文字
+//       if (text) {
+//         drawText(ctx, text, x, y, width, fontSize, fontSize + 5, fontColor);
+//       }
+//       // 绘制辅助线
+//     });
+//     drawHelpLines(ctx, helpLines);
+//     // 绘制连接点虚线
+//     if (preparedConnection) {
+//       drawDashLine(ctx, preparedConnection);
+//     }
+//     // 绘制连接线
+//     if (connections && connections.length) {
+//       drawConnections(ctx, shapes, connections, hoveringConnectionId);
+//     }
+//     // 绘制多选框
+//     if (multipleSelectRect) {
+//       const { x, y, width, height } = multipleSelectRect;
+//       ctx.strokeStyle = COLOR_SELECTED_COLOR;
+//       ctx.strokeRect(x - width / 2, y - height / 2, width, height);
+//       drawControlPoints(ctx, multipleSelectRect);
+//     }
+//   }
+// };

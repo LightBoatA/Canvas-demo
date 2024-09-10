@@ -1,4 +1,3 @@
-import { getCryptoUuid } from '../../../utils/util';
 import { EShape } from '../../Toolbar/common';
 import { Circle } from '../shapes/Circle';
 import { Diamond } from '../shapes/Diamond';
@@ -6,9 +5,9 @@ import { Parallelogram } from '../shapes/Parallelogram';
 import { Rectangle } from '../shapes/Rectangle';
 import { RoundedRect } from '../shapes/RoundedRect';
 import { Shape } from '../shapes/Shape';
-import { calcMouseMoveInfo, calcMultipleSelectRect, getConnectionPointVal, isPointInLine, isPointInShape } from './calculator';
-import { INIT_SHAPES } from './constant';
-import { EConnectPointDirection, EElement, IBounds, IConnection, IConnectionPoint, IRect, ISelectedMapObj, IShape } from './types';
+import { shapeFactoryMap } from '../shapes/ShapeFactoryMap';
+import { calcMouseMoveInfo, calcMultipleSelectRect, isPointInLine, isPointInShape } from './calculator';
+import { EElement, IBounds, IConnection, IRect, ISelectedMapObj, IShape } from './types';
 
 /**
  * 获取形状的边界坐标值
@@ -33,22 +32,12 @@ export const getRectBounds = (rect: IRect): IBounds => {
  * @returns
  */
 export const getInitShapeData = (name: EShape, x: number, y: number): IShape => {
-  const id = getCryptoUuid();
-  const shapeData = INIT_SHAPES[name];
-  const { width, height } = shapeData;
-  const connectionPoints: IConnectionPoint[] = [
-    getConnectionPointVal(x, y, width, height, EConnectPointDirection.TOP),
-    getConnectionPointVal(x, y, width, height, EConnectPointDirection.RIGHT),
-    getConnectionPointVal(x, y, width, height, EConnectPointDirection.BOTTOM),
-    getConnectionPointVal(x, y, width, height, EConnectPointDirection.LEFT)
-  ];
-  return {
-    ...shapeData,
-    id,
-    x,
-    y,
-    connectionPoints
-  };
+  const factory = shapeFactoryMap[name];
+  if (!factory) {
+    throw new Error(`No factory found for shape type ${name}`);
+  }
+
+  return factory.createShapeData(x, y);
 };
 
 /**
@@ -125,18 +114,17 @@ export const getSelectedShapes = (selectedMap: ISelectedMapObj, shapes: IShape[]
 };
 
 export const createShpaeInstance = (shapeData: IShape): Shape => {
-  const { id, x, y, width, height, fillColor, strokeColor, lineWidth, tangentAlpha, text, fontColor, fontSize, connectionPoints } = shapeData;
   switch (shapeData.type) {
     case EShape.RECT:
-      return new Rectangle(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+      return new Rectangle({ ...shapeData });
     case EShape.CIRCLE:
-      return new Circle(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+      return new Circle({ ...shapeData });
     case EShape.DIAMOND:
-      return new Diamond(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+      return new Diamond({ ...shapeData });
     case EShape.ROUNDED_RECT:
-      return new RoundedRect(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints);
+      return new RoundedRect({ ...shapeData });
     case EShape.PARALLELOGRAM:
-      return new Parallelogram(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints, tangentAlpha || 1);
+      return new Parallelogram({ ...shapeData }, shapeData.tangentAlpha || 1);
     default:
       throw new Error('Unknown shape type');
   }

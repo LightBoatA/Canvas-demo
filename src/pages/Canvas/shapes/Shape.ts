@@ -1,20 +1,44 @@
-import { COLOR_BORDER, COLOR_BORDER_HOVER, CONNECT_POINT_RADIUS, IConnectionPoint, IShapeConnectionPoint } from '../common';
+import { COLOR_BORDER, COLOR_BORDER_HOVER, CONNECT_POINT_RADIUS, IConnectionPoint, IShape, IShapeConnectionPoint } from '../common';
 
 export abstract class Shape {
-  constructor(
-    public readonly id: string,
-    protected readonly x: number,
-    protected readonly y: number,
-    protected readonly width: number,
-    protected readonly height: number,
-    protected readonly fillColor: string,
-    protected readonly strokeColor: string,
-    protected readonly lineWidth: number,
-    protected readonly text: string,
-    protected readonly fontColor: string,
-    protected readonly fontSize: number,
-    protected readonly connectionPoints: IConnectionPoint[]
-  ) {}
+  public readonly id: string;
+
+  protected readonly x: number;
+
+  protected readonly y: number;
+
+  protected readonly width: number;
+
+  protected readonly height: number;
+
+  protected readonly fillColor: string;
+
+  protected readonly strokeColor: string;
+
+  protected readonly lineWidth: number;
+
+  protected readonly text: string;
+
+  protected readonly fontColor: string;
+
+  protected readonly fontSize: number;
+  
+  protected readonly connectionPoints: IConnectionPoint[];
+
+  constructor({ id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints }: IShape) {
+    this.id = id;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.fillColor = fillColor;
+    this.strokeColor = strokeColor;
+    this.lineWidth = lineWidth;
+    this.text = text;
+    this.fontColor = fontColor;
+    this.fontSize = fontSize;
+    this.connectionPoints = connectionPoints;
+  }
 
   abstract draw(ctx: CanvasRenderingContext2D): void;
 

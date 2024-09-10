@@ -1,26 +1,15 @@
-import { IConnectionPoint } from "../common";
+import { IConnectionPoint, IShape } from "../common";
 import { Shape } from "./Shape";
 
 export class Parallelogram extends Shape {
   private readonly tangentAlpha: number;
 
   constructor(
-    id: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    fillColor: string,
-    strokeColor: string,
-    lineWidth: number,
-    text: string,
-    fontColor: string,
-    fontSize: number,
-    connectionPoints: IConnectionPoint[],
+    shapeData: IShape,
     tangentAlpha: number, // 额外的属性
     
     ) {
-    super(id, x, y, width, height, fillColor, strokeColor, lineWidth, text, fontColor, fontSize, connectionPoints );
+    super(shapeData);
     this.tangentAlpha = tangentAlpha;
   }
 

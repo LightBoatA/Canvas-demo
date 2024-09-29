@@ -60,13 +60,11 @@ export const EditInput: React.FC<IProps> = props => {
     let style: CSSProperties = {};
     if (editingShape) {
       const { x, y, width, height, fontSize, text } = editingShape;
-      console.log(editingShape);
       style = {
         left: (x - width / 2) * canvasScale + canvasPosition[0],
         top: (y - height / 2) * canvasScale + canvasPosition[1],
         width: `${width * canvasScale}px`,
-        // height: `${height * canvasScale}px`,
-        height: `auto`,
+        height: `${height * canvasScale}px`,
         fontSize: fontSize * canvasScale
       };
     }

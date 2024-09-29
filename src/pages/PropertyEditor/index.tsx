@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { green, red, blue, grey } from '@ant-design/colors';
 import { ColorPicker, InputNumber, Select, Space } from 'antd';
 import './index.less';
@@ -6,7 +6,7 @@ import { CANVAS_SCALE_OPTIONS, FONT_SIZE_OPTIONS, colorBtns } from './common';
 import { useElement } from '../../hooks/useElement';
 import { useCommon } from '../../hooks/useCommon';
 import { EElement, IConnection, IShape, MAX_SCALE, MIN_SCALE } from '../Canvas/common';
-import { findValueObj } from '../../utils/util';
+import { findValueObj, getCanvasEle } from '../../utils/util';
 
 interface IProps {
   rootClassName?: string;
@@ -39,6 +39,18 @@ export const PropertyEditor: React.FC<IProps> = props => {
   const isShow = useMemo(() => {
     return Boolean(Object.keys(selectedMap).length);
   }, [selectedMap]);
+
+  const handleExport = useCallback(() => {
+    const canvas = getCanvasEle();
+    // TODO: 比例问题、背景删除、选项删除
+    if (canvas) {
+      const imageData = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = imageData;
+      link.download = '流程图.png';
+      link.click();
+    }
+  }, [])
 
   return useMemo(() => {
     return (
@@ -89,16 +101,17 @@ export const PropertyEditor: React.FC<IProps> = props => {
             max={MAX_SCALE}
             step={0.1}
             value={canvasScale}
-            formatter={(value) => `${((value || 1) * 100).toFixed(0)}%`}
-            parser={value => (value?.replace('%', '') as unknown as number) / 100 }
+            formatter={value => `${((value || 1) * 100).toFixed(0)}%`}
+            parser={value => (value?.replace('%', '') as unknown as number) / 100}
             onChange={data => {
               data && updateCanvasScale(data);
             }}
           />
+          <div className={`edit-icon-btn icon-export`} onClick={handleExport}></div>
         </Space>
       </div>
     );
-  }, [canvasScale, firstShape?.fontSize, isShow, presets, rootClassName, selectedMap, updateCanvasScale, updateConnectionByIds, updateShapeByIds]);
+  }, [canvasScale, firstShape?.fontSize, handleExport, isShow, presets, rootClassName, selectedMap, updateCanvasScale, updateConnectionByIds, updateShapeByIds]);
 };
 
 export default PropertyEditor;

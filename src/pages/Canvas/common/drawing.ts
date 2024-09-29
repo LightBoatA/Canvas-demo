@@ -1,4 +1,3 @@
-import { EShape } from '../../Toolbar/common';
 import { getConnectionRoutes } from '../routers/utils';
 import { getCtrlPoints } from './calculator';
 import {
@@ -7,11 +6,8 @@ import {
   GRID_SIZE,
   CTRL_POINT_HALF_SIZE,
   COLOR_GRID,
-  COLOR_BORDER,
-  CONNECT_POINT_RADIUS,
   COLOR_DASHLINE,
   COLOR_CONNECTION,
-  COLOR_BORDER_HOVER,
   COLOR_SELECTED_COLOR,
   COLOR_CTRL_POINT,
   COLOR_GRID_DARK,
@@ -75,118 +71,6 @@ const drawControlPoints = (ctx: CanvasRenderingContext2D, rect: IRect) => {
   });
 };
 
-/**
- * 绘制连接点
- * @param ctx
- * @param shape
- */
-const drawConnectPoints = (ctx: CanvasRenderingContext2D, shape: IShape, hovingConnectionPoint: IShapeConnectionPoint | null) => {
-  const { connectionPoints } = shape;
-  ctx.fillStyle = '#FFF';
-  ctx.lineWidth = 1;
-  connectionPoints.forEach(point => {
-    const { x: _x, y: _y } = point;
-    const ishovering = hovingConnectionPoint && hovingConnectionPoint.shape.id === shape.id && hovingConnectionPoint.point.direction === point.direction;
-    ctx.strokeStyle = ishovering ? COLOR_BORDER_HOVER : COLOR_BORDER;
-    ctx.lineWidth = ishovering ? 2 : 1;
-    ctx.beginPath();
-    ctx.arc(_x, _y, CONNECT_POINT_RADIUS, 0, 2 * Math.PI, false);
-    ctx.fill();
-    ctx.stroke();
-  });
-  // }
-};
-
-// /**
-//  * 绘制选中边框
-//  * @param ctx
-//  * @param shape
-//  */
-// const drawSelectedBorder = (ctx: CanvasRenderingContext2D, shape: IShape) => {
-//   const { x, y, width, height } = shape;
-//   ctx.strokeStyle = COLOR_BORDER;
-//   ctx.lineWidth = 2;
-//   ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-// };
-
-// /**
-//  * 绘制选中边框、缩放控制点等控制类图形
-//  * @param ctx
-//  * @param shape
-//  */
-// const drawCtrlShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
-//     drawSelectedBorder(ctx, shape);
-//     drawControlPoints(ctx, shape);
-// }
-
-/**
- * 绘制鼠标悬停状态下的边框
- * @param ctx
- * @param shape
- */
-const drawHoveringShape = (ctx: CanvasRenderingContext2D, shape: IShape) => {
-  const { x, y, width, height } = shape;
-  ctx.strokeStyle = COLOR_BORDER;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-};
-
-// /**
-//  * 根据起止点绘制直线
-//  * @param ctx
-//  * @param from
-//  * @param to
-//  */
-// const drawLine = (ctx: CanvasRenderingContext2D, from: IPoint, to: IPoint) => {
-//     ctx.beginPath();
-//     ctx.moveTo(from.x, from.y);
-//     ctx.lineTo(to.x, to.y);
-//     ctx.stroke();
-// }
-
-// /**
-//  * 用于测试连线路由选择辅助点绘制
-//  * @param ctx
-//  * @param points
-//  * @param startPoint
-//  * @param endPoint
-//  * @param fakeStartPoint
-//  * @param fakeEndPoint
-//  */
-// const drawTestHelpPoint = (ctx: CanvasRenderingContext2D, points: number[][], startPoint: number[], endPoint: number[], fakeStartPoint: number[], fakeEndPoint: number[]) => {
-//   points.forEach((point: number[]) => {
-//     const [x, y] = point;
-//     ctx.beginPath();
-//     ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
-//     ctx.fill();
-//   });
-
-//   ctx.fillStyle = 'black';
-//   const [x3, y3] = startPoint;
-//   ctx.beginPath();
-//   ctx.arc(x3, y3, 4, 0, 2 * Math.PI, false);
-//   ctx.fill();
-
-//   ctx.fillStyle = 'black';
-//   const [x4, y4] = startPoint;
-//   ctx.beginPath();
-//   ctx.arc(x4, y4, 4, 0, 2 * Math.PI, false);
-//   ctx.fill();
-
-//   ctx.fillStyle = 'red';
-//   const [x, y] = fakeStartPoint;
-//   ctx.beginPath();
-//   ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
-//   ctx.fill();
-
-//   ctx.fillStyle = 'red';
-//   const [x1, y1] = fakeEndPoint;
-//   ctx.beginPath();
-//   ctx.arc(x1, y1, 4, 0, 2 * Math.PI, false);
-//   ctx.fill();
-
-//   ctx.fillStyle = COLOR_SHAPE;
-// };
 /**
  * 绘制连线末端的箭头
  * @param ctx
